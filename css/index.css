@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800,900&display=swap');
+
+:root {
+  --gris_1: #1a2435;
+  --gris_2: #262c37;
+  --white: rgba(255, 255, 255, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("../images/background_3.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.menu {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ------------------------------ Play ------------------------------- */
+
+.menu__start {
+  width: 110px;
+  height: 110px;
+  background: var(--gris_1);
+  border-radius: 70px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+  
+}
+/*
+.menu__start ion-icon {
+  color: white;
+  font-size: 60px;
+  transition: 1.5s;
+}
+*/
+.menu__start::before {
+  content: 'Δ';
+  position: absolute;
+  font-size: 3em;
+  font-weight: 200;
+  color: rgba(255, 255, 255, 0.4);
+  transition: 1.5s;
+  transform: rotate(90deg);
+}
+
+.menu__start.active::before {
+  color: white;
+  transform: rotate(450deg);
+  color: rgba(255, 255, 255, 1);
+}
+
+.menu_transparent {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: var(--gris_1);
+  color: white;
+  border-radius: 60px;
+  top: 550px;
+  z-index: -1;
+  transition: transform 0.5s, width 0.5s, height 0.5s;
+  transition-delay: 1s, 0.5s, 0.5s;
+  transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.menu__start.active ~ .menu_transparent {
+  width: 300px;
+  height: 350px;
+  background: var(--gris_1);
+  z-index: 1;
+  transform: translateX(290px);
+  transition-delay: 0s, 0.5s, 0.5s;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1); 
+}
+
+.menu_transparent::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: var(--gris_1);
+  left: 2px;
+  top: 20px;
+  transform: rotate(80deg);
+  border-radius: 2px;
+  transition: 0.5s;
+}
+
+.menu__start.active ~ .menu_transparent::before {
+  transition-delay: 0.5s;
+  bottom: -6px;
+}
+
+.menu_transparent a {
+  text-decoration: none;
+  color: white;
+}
+
+.menu_transparent ul {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  gap: 10px;
+}
+
+.menu_transparent ul li {
+  list-style: none;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-30px);
+  transition: 0.25s;
+  transition-delay: calc(0s + var(--i));
+}
+
+.menu_transparent h3 {
+  cursor: default;
+}
+
+.menu__start.active ~ .menu_transparent ul li {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(130px);
+  transition-delay: calc(0.75s + var(--i));
+}
+
+.menu_transparent ul li a {
+  display: block;
+  font-size: 1.3em;
+  text-decoration: none;
+  color: #555;
+}
+
+.menu_transparent ul li:hover a {
+  color: #e01818;
+}
+
+/* ------------------------------------------------------------------- */
+
+/* ----------------------------- Buttons ----------------------------- */
+
+.menu__buttons {
+  display: flex;
+  flex-direction: column;
+  height: 150px;
+  align-items: center;
+  justify-content: space-around;
+  
+}
+
+.button {
+  position: relative;
+  display: inline-block;
+  padding: 10px 30px;
+  width: 250px;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  background: var(--gris_1);
+  letter-spacing: 2px;
+  font-size: 24px;
+  transition: 0.5s;
+}
+
+.button:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+.button span {
+  display: block;
+  position: absolute;
+  background: #fff;
+}
+
+.button span:nth-child(1) {
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 100%;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.5s;
+}
+
+.button:hover span:nth-child(1) {
+  transform: scaleY(1);
+  transform-origin: bottom;
+  transition: transform 0.5s;
+}
+
+.button span:nth-child(2) {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s;
+}
+
+.button:hover span:nth-child(2) {
+  transform: scaleX(1);
+  transform-origin: left;
+  transition: transform 0.5s;
+}
+
+.button span:nth-child(3) {
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 100%;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.5s;
+  transition-delay: 0.5s;
+}
+
+.button:hover span:nth-child(3) {
+  transform: scaleY(1);
+  transform-origin: bottom;
+  transition: transform 0.5s;
+  transition-delay: 0.5s;
+}
+
+.button span:nth-child(4) {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s;
+  transition-delay: 0.5s;
+}
+
+.button:hover span:nth-child(4) {
+  transform: scaleX(1);
+  transform-origin: left;
+  transition: transform 0.5s;
+  transition-delay: 0.5s;
+}
+
+
+/* ------------------------------------------------------------------- */

@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800,900&display=swap');
+
+:root {
+  --gris_1: #1a2435;
+  --gris_2: #262c37;
+  --white: rgba(255, 255, 255, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("../images/background_4.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--gris_1);
+}
+
+.container__game {
+  display: flex;
+  align-items: center;
+}
+
+.canvas {
+  background-color: rgba(255, 255, 255, 0.6);
+  padding: 30px;
+  width: 500px;
+  height: 500px;
+  border-radius: 20px;
+  border: 1px solid var(--gris_1);
+}
+
+.container__information {
+  background-color: rgba(255, 255, 255, 0.6);
+  width: 300px;
+  height: 400px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
