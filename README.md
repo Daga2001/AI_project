@@ -12,3 +12,4 @@ The ultimate AI's project developed by Unixvalle members
 ## Update 1.0
 - se crea la interfaz gráfica para el juego de mario 
 - se agregan efectos de sonido de fondo 
+- se adiciona el archivo README.md para documentar las funcionalidades que se estén implementando
