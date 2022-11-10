@@ -20,19 +20,9 @@ canvas.height = 800
 //Dimensions
 const squareSize = 80
 
-//Images
-let wall_img = new Image();
-wall_img.src = `../images/wall.png`;
-let mario_img = new Image();
-mario_img.src = `../images/mario.png`;
-let star_img = new Image();
-star_img.src = `../images/star.png`;
-let flower_img = new Image();
-flower_img.src = `../images/fire-flower.png`;
-let bowser_img = new Image();
-bowser_img.src = `../images/bowser.png`;
-let princess_img = new Image();
-princess_img.src = `../images/peach.png`;
+//Sounds
+let audioBackground = new Audio(`../sound/main-theme.mp3`)
+let hereWeGo = new Audio(`../sound/here-we-go.mp3`)
 
 //world
 var world = 
@@ -49,9 +39,34 @@ var world =
     [1,1,1,1,1,1,1,0,1,1],
 ]
 
+// Mario's stats
+let mario = {
+    posx: 0,
+    posy: 0
+}
+
 //====================================================================================
 // DECLARATION OF FUNCTIONS OR METHODS
 //====================================================================================
+
+/**
+ * sleeps the program while is executing with a given delay in miliseconds
+ * @param {Number} delay 
+ */
+function sleep(delay) {
+    var start = new Date().getTime();
+    while (new Date().getTime() < start + delay);
+}
+
+/**
+ * Makes a deep copy of an object. 
+ * A deep copy of an object is a copy whose properties do not share the same references.
+ * @param {*} object 
+ * @returns 
+ */
+function deep_copy(object) {
+    return JSON.parse(JSON.stringify(object));
+}
 
 /**
  * Displays a square with a defined color
@@ -71,62 +86,99 @@ function paintSquare(x,y,width,height,color) {
 }
 
 /**
+ * Draws an image in canvas with a given source, which means the pic's name
+ * @param {Number} x 
+ * @param {Number} y 
+ * @param {Number} width 
+ * @param {Number} height 
+ * @param {Number} source 
+ */
+
+function showImage(x,y,width,height,source) {
+    let img = new Image()
+    img.src = `../images/${source}.png`
+    img.onload = function() {
+        ctx.drawImage(img,x,y,width,height)
+    }
+}
+
+/**
  * Draws and paints all the magnificence of the mario's world
  * @param {Object} world 
  * @returns
  */
 
 function paintWorld(world) {
-    let xSquare = 0;      //initial x
-    let ySquare = 0;      //initial y
     for (let y = 0; y < world.length; y++){
-        xSquare = 0;
         for (let x = 0; x < world[y].length; x++){
-            console.log(`x: ${x}, y: ${y}, world[y][x] ${world[y][x]}, xSquare: ${xSquare}, ySquare: ${wall_img}`)
             if (world[y][x] == 0){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"white")
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"white")     
             }
             else if (world[y][x] == 1){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"brown")
-                // ctx.drawImage(wall_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"brown")
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"wall")
             }
             else if (world[y][x] == 2){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"#fa4b2a")
-                // ctx.drawImage(mario_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"#fa4b2a")
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"mario")
+                mario.posx = x
+                mario.posy = y
             }
             else if (world[y][x] == 3){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"yellow")
-                // ctx.drawImage(star_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"yellow")
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"star")
             }
             else if (world[y][x] == 4){  
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"orange")
-                // ctx.drawImage(flower_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"orange")     
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"fire-flower")
             }
             else if (world[y][x] == 5){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"green")
-                // ctx.drawImage(bowser_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"green")
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"bowser")
             }
             else if (world[y][x] == 6){
-                paintSquare(xSquare,ySquare,squareSize,squareSize,"pink")
-                // ctx.drawImage(princess_img, xSquare, ySquare, squareSize, squareSize)
+                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"pink")
+                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"peach")
             }
             else {
                 throw `There's an invalid item in world's array: ${world[y][x]} at (${x+1},${y+1})`
             }
-            xSquare += squareSize;
         }
-        ySquare += squareSize;
     }
 }
 
 //====================================================================================
-// logic - basic's
+// logical structure
 //====================================================================================
 
 try{
-    // paintWorld(world)
-    ctx.drawImage(bowser_img,0,0,100,100)
+    // Plays the background music
+    audioBackground.currentTime = 0
+    audioBackground.loop = true
+    audioBackground.play()
+    hereWeGo.currentTime = 0
+    hereWeGo.play()
+
+    // The world is painted at the beginning
+    paintWorld(world)
+
+    // Key listener
+    document.body.addEventListener('keydown', ( event ) => {
+        console.log(event.key)
+        if(event.key == "ArrowUp") {
+            
+        }
+        if(event.key == "ArrowDown") {
+
+        }
+        if(event.key == "ArrowLeft") {
+
+        }
+        if(event.key == "ArrowRight") {
+
+        }
+    })
 }
 catch(e) {
-    console.error(`An error has occurred during game's execution ${e}`);
+    console.error(`An error has occurred during game's execution: ${e}`);
 }
