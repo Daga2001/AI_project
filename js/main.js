@@ -45,14 +45,25 @@ let mario = {
     posy: 0
 }
 
+// Princess's stats
+let princess = {
+    posx: 0,
+    posy: 0
+}
+
+// Tests
+let sol = ["up","right","right","right","right","down","right","right","right","right","right","right",
+           "down","down","down","down","left","left"]
+
 //====================================================================================
 // DECLARATION OF FUNCTIONS OR METHODS
 //====================================================================================
 
 /**
- * sleeps the program while is executing with a given delay in miliseconds
+ * sleeps the program while is executing with a given delay in miliseconds.
  * @param {Number} delay 
  */
+
 function sleep(delay) {
     var start = new Date().getTime();
     while (new Date().getTime() < start + delay);
@@ -64,12 +75,57 @@ function sleep(delay) {
  * @param {*} object 
  * @returns 
  */
+
 function deep_copy(object) {
     return JSON.parse(JSON.stringify(object));
 }
 
 /**
- * Displays a square with a defined color
+ * Abstracts all imposible movements from mario's position.
+ * @param {Object} mario 
+ * @param {Object} world
+ * @returns List
+ */
+
+function impossibleMovements(mario, world) {
+    let movements = [];
+    if(mario.posx == 0) {
+        movements.push("left");
+    }
+    if(mario.posx == world.length - 1) {
+        movements.push("right");
+    }
+    if(mario.posy == 0) {
+        movements.push("up");
+    }
+    if(mario.posy == world.length - 1) {
+        movements.push("down");
+    }
+    if (!(mario.posx == 0)) {
+        if(world[mario.posy][mario.posx-1] == 1) {
+            movements.push("left");
+        }
+    }
+    if(!(mario.posx == world.length - 1)) {
+        if(world[mario.posy][mario.posx+1] == 1) {
+            movements.push("right");
+        }
+    }
+    if(!(mario.posy == 0)) {
+        if(world[mario.posy-1][mario.posx] == 1) {
+            movements.push("up");
+        }
+    }
+    if(!(mario.posy == world.length - 1)) {
+        if(world[mario.posy+1][mario.posx] == 1) {
+            movements.push("down");
+        }
+    }
+    return movements;
+}
+
+/**
+ * Displays a square with a defined color.
  * @param {Number} x 
  * @param {Number} y 
  * @param {Number} width 
@@ -86,7 +142,7 @@ function paintSquare(x,y,width,height,color) {
 }
 
 /**
- * Draws an image in canvas with a given source, which means the pic's name
+ * Draws an image in canvas with a given source, which means the pic's name.
  * @param {Number} x 
  * @param {Number} y 
  * @param {Number} width 
@@ -103,7 +159,7 @@ function showImage(x,y,width,height,source) {
 }
 
 /**
- * Draws and paints all the magnificence of the mario's world
+ * Draws and paints all the magnificence of the mario's world.
  * @param {Object} world 
  * @returns
  */
@@ -119,10 +175,9 @@ function paintWorld(world) {
                 showImage(x*squareSize,y*squareSize,squareSize,squareSize,"wall")
             }
             else if (world[y][x] == 2){
-                paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"#fa4b2a")
-                showImage(x*squareSize,y*squareSize,squareSize,squareSize,"mario")
                 mario.posx = x
                 mario.posy = y
+                paintMario(mario)
             }
             else if (world[y][x] == 3){
                 paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"yellow")
@@ -137,6 +192,8 @@ function paintWorld(world) {
                 showImage(x*squareSize,y*squareSize,squareSize,squareSize,"bowser")
             }
             else if (world[y][x] == 6){
+                princess.posx = x;
+                princess.posy = y;
                 paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,"pink")
                 showImage(x*squareSize,y*squareSize,squareSize,squareSize,"peach")
             }
@@ -145,6 +202,66 @@ function paintWorld(world) {
             }
         }
     }
+}
+
+/**
+ * Draws Mr. Mario with its current position.
+ * @param {Object} mario 
+ * @param {Object} world 
+ */
+
+function paintMario(mario) {
+    paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"#fa4b2a")
+    showImage(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"mario")
+}
+
+/**
+ * Turns mario in a given direction and paints him.
+ * @param {String} dir: "up", "down", "left", "right"
+ */
+
+function moveMario(dir) {
+    let impossiblesM = impossibleMovements(mario, world);
+    if(dir == "up" && !impossiblesM.includes("up")) {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
+        world[mario.posy][mario.posx] = 0;
+        world[mario.posy-1][mario.posx] = 2;
+        mario.posy -= 1;
+        paintMario(mario)
+    }
+    if(dir == "down" && !impossiblesM.includes("down")) {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
+        world[mario.posy][mario.posx] = 0;
+        world[mario.posy+1][mario.posx] = 2;
+        mario.posy += 1;
+        paintMario(mario)
+    }
+    if(dir == "left" && !impossiblesM.includes("left")) {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
+        world[mario.posy][mario.posx] = 0;
+        world[mario.posy][mario.posx-1] = 2;
+        mario.posx -= 1;
+        paintMario(mario)
+    }
+    if(dir == "right" && !impossiblesM.includes("right")) {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
+        world[mario.posy][mario.posx] = 0;
+        world[mario.posy][mario.posx+1] = 2;
+        mario.posx += 1;
+        paintMario(mario)
+    }
+}
+
+/**
+ * Performs the next mario's movement.
+ * @param {Object} mario 
+ * @param {List} sol 
+ */
+
+function nextMovement(sol) {
+    let nextMov = sol.shift()
+    console.log(sol)
+    moveMario(nextMov)
 }
 
 //====================================================================================
@@ -162,22 +279,29 @@ try{
     // The world is painted at the beginning
     paintWorld(world)
 
+    // When mario starts to move
+    let intervalID = setInterval(() => {
+        nextMovement(sol);
+        if(mario.posx == princess.posx && mario.posy == princess.posy) {
+            clearInterval(intervalID);
+        }
+    }, 1000)    
+
     // Key listener
-    document.body.addEventListener('keydown', ( event ) => {
-        console.log(event.key)
-        if(event.key == "ArrowUp") {
-            
-        }
-        if(event.key == "ArrowDown") {
-
-        }
-        if(event.key == "ArrowLeft") {
-
-        }
-        if(event.key == "ArrowRight") {
-
-        }
-    })
+    // document.body.addEventListener('keydown', ( event ) => {
+    //     if(event.key == "ArrowUp") {
+    //         moveMario("up")
+    //     }
+    //     if(event.key == "ArrowDown") {
+    //         moveMario("down")
+    //     }
+    //     if(event.key == "ArrowLeft") {
+    //         moveMario("left")
+    //     }
+    //     if(event.key == "ArrowRight") {
+    //         moveMario("right")
+    //     }
+    // })
 }
 catch(e) {
     console.error(`An error has occurred during game's execution: ${e}`);
