@@ -13,3 +13,6 @@ The ultimate AI's project developed by Unixvalle members
 - se crea la interfaz gráfica para el juego de mario 
 - se agregan efectos de sonido de fondo 
 - se adiciona el archivo README.md para documentar las funcionalidades que se estén implementando
+
+## Update 1.1
+- mario es capaz de moverse solo, dado un array solución.
