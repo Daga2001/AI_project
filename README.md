@@ -20,3 +20,6 @@ The ultimate AI's project developed by Unixvalle members
 ## Update 1.2
 - el usuario del juego puede personalizar el mapa de juego, cargando el nuevo mapa en un archivo de texto.
 - el panel de información del juego ha sido estructurado. Aún no se enlaza con js.
+
+## Update 1.3
+- Aparece menu cuando se acaba el juego (victoria).

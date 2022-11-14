@@ -11,11 +11,14 @@
  */
 //====================================================================================
 
-// canvas -> Game
+//canvas -> game
 const canvas = document.getElementsByTagName('canvas')[0];
 const ctx = canvas.getContext('2d');
-canvas.width = 500;
-canvas.height = 500;
+canvas.width = 500
+canvas.height = 500
+
+//Restart button
+const restartButton = document.getElementById('restart-game-btn');
 
 //Dimensions
 const squareSize = 50
@@ -25,7 +28,21 @@ let audioBackground = new Audio(`../sound/main-theme.mp3`)
 let hereWeGo = new Audio(`../sound/here-we-go.mp3`)
 
 //world
-var world = 
+let world = 
+[
+    [1,0,0,0,0,0,0,0,1,1],
+    [0,3,1,1,0,1,1,0,0,1],
+    [1,1,1,1,0,1,1,1,3,0],
+    [0,0,0,0,0,1,1,1,1,0],
+    [2,1,1,1,0,0,0,0,5,5],
+    [0,0,0,1,0,1,1,1,1,5],
+    [0,1,0,0,0,5,5,5,0,0],
+    [0,1,1,0,1,1,1,1,1,0],
+    [0,4,4,0,1,1,1,6,0,0],
+    [1,1,1,1,1,1,1,0,1,1],
+]
+
+let initWorld = 
 [
     [1,0,0,0,0,0,0,0,1,1],
     [0,3,1,1,0,1,1,0,0,1],
@@ -253,6 +270,31 @@ function moveMario(dir) {
 }
 
 /**
+ * Ends with all the mario's world, when mario losses or wins.
+ */
+
+function endGame() {
+    let endScreen = document.getElementById('end-screen');
+    let container = document.getElementById('container');
+    endScreen.style.display = `flex`;
+    container.style.display = `none`;
+}
+
+/**
+ * Restarts the mario's game with the same world.
+ */
+
+function restartGame() {
+    world = deep_copy(initWorld);
+    
+    paintWorld(world);
+    let endScreen = document.getElementById('end-screen');
+    let container = document.getElementById('container');
+    endScreen.style.display = `none`;
+    container.style.display = `flex`;
+}
+
+/**
  * Performs the next mario's movement.
  * @param {Object} mario 
  * @param {List} sol 
@@ -284,8 +326,14 @@ try{
         nextMovement(sol);
         if(mario.posx == princess.posx && mario.posy == princess.posy) {
             clearInterval(intervalID);
+            endGame();
         }
     }, 1000)    
+
+    // Button listener
+    restartButton.addEventListener('mousedown', () => {
+        restartGame();
+    })
 
     // Key listener
     // document.body.addEventListener('keydown', ( event ) => {
