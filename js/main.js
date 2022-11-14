@@ -11,14 +11,14 @@
  */
 //====================================================================================
 
-//canvas
+// canvas -> Game
 const canvas = document.getElementsByTagName('canvas')[0];
 const ctx = canvas.getContext('2d');
-canvas.width = 800
-canvas.height = 800
+canvas.width = 500;
+canvas.height = 500;
 
 //Dimensions
-const squareSize = 80
+const squareSize = 50
 
 //Sounds
 let audioBackground = new Audio(`../sound/main-theme.mp3`)
