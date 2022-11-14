@@ -16,3 +16,6 @@ The ultimate AI's project developed by Unixvalle members
 
 ## Update 1.1
 - mario es capaz de moverse solo, dado un array solución.
+
+## Update 1.2
+- el usuario del juego puede personalizar el mapa de juego, cargando el nuevo mapa en un archivo de texto.

@@ -165,7 +165,7 @@ body {
 .menu__buttons {
   display: flex;
   flex-direction: column;
-  height: 150px;
+  height: 200px;
   align-items: center;
   justify-content: space-around;
   

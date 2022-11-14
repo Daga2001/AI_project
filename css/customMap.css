@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+:root {
+  --slist: #ffda5f, #f9376b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+}
+
+body {
+  position: relative;
+  height: 100vh;
+  background-image: url("../images/background_custom.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.information {
+  position: absolute;
+  width: 70%;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  top: 150px;
+  left: 50px;
+  transition: 0.5s;
+}
+
+.information h1 {
+  color: #fff;
+  font-size: 70px;
+}
+
+.information p {
+  color: #fff;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.buttons {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  width: 70%;
+  justify-content: space-evenly;
+  align-items: center;
+  top: 320px;
+  left: 50px;
+  transition: 0.5s;
+}
+
+.buttons input {
+  font-size: 16px;
+  background: white;
+  border-radius: 50px;
+  box-shadow: 5px 5px 10px rgba(255, 255, 255, 0.5);
+  width: 350px;
+  outline: none;
+}
+
+::-webkit-file-upload-button {
+  color: white;
+  background: #811818;
+  padding: 20px;
+  border: none;
+  border-radius: 50px;
+  box-shadow: 1px 0 1px 1px #6b4559;
+  outline: none;
+  transition: 0.5s;
+}
+
+::-webkit-file-upload-button:hover {
+  background: #a72020;
+}
+
+.buttons a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 70px;
+  height: 70px;
+  font-size: 30px;
+  color: white;
+  background: transparent;
+  border-radius: 30px;
+  border: solid 3px transparent;
+  border-color: red;
+  transition: 0.5s;
+  text-decoration: none;
+}
+
+.buttons a:hover {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: rgb(160, 12, 12);
+  transform: scale(1.15);
+}
+
+.map {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.2);
+  width: 520px;
+  height: 520px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  border: 1px solid white;
+  bottom: 30px;
+  right: 5%;
+  transition: 0.5s;
+}
+
+@media (min-width: 1100px) {
+  .information {
+    width: 55%;
+    left: 15%;
+  }
+
+  .buttons {
+    width: 55%;
+    left: 15%;
+  }
+
+  .map {
+    right: 15%;
+  }
+}
