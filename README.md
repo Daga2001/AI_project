@@ -23,3 +23,8 @@ The ultimate AI's project developed by Unixvalle members
 
 ## Update 1.3
 - Aparece menu cuando se acaba el juego (victoria).
+
+## Update 1.4
+- Se cambia la GUI del juego, para que aparezcan las estadisticas en la pantalla del final del juego.
+- Se hace el algoritmo de Agora.
+- Se corrige defecto para reconocer entradas que otorga el usuario en customMap.html.

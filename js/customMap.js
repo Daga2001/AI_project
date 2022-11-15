@@ -23,7 +23,7 @@ const squareSize = 50
  */
 
  function paintSquare(x,y,width,height,color) {
-  ctx.fillStyle = color           //color of fill
+  ctx.fillStyle = color             //color of fill
   ctx.strokeStyle = "black"            //border's color
   ctx.lineWidth = "2"                //border's width
   ctx.fillRect(x,y,width,height)      //create rectangle
@@ -120,7 +120,9 @@ document.getElementById('inputFile').addEventListener('change', function() {
     splitString(text);
     // console.log(world);
     paintWorld(world);
+    window.localStorage.setItem("world",world)
   }
   file.readAsText(this.files[0]);
 });
 
+export const worldSketch = world;

@@ -1,14 +1,10 @@
 //====================================================================================
+// LIBRARIES OR OTHER FUNCTIONS
+//====================================================================================
+import { manhattanDist } from './utils.js'
+
+//====================================================================================
 // DECLARATION OF VARIABLES
-/**
- * 0 <- empty field
- * 1 <- wall
- * 2 <- mario's starting point 
- * 3 <- star
- * 4 <- flame flower
- * 5 <- koopa (bowser)
- * 6 <- princess
- */
 //====================================================================================
 
 //canvas -> game
@@ -28,33 +24,35 @@ let audioBackground = new Audio(`../sound/main-theme.mp3`)
 let hereWeGo = new Audio(`../sound/here-we-go.mp3`)
 
 //world
-let world = 
-[
-    [1,0,0,0,0,0,0,0,1,1],
-    [0,3,1,1,0,1,1,0,0,1],
-    [1,1,1,1,0,1,1,1,3,0],
-    [0,0,0,0,0,1,1,1,1,0],
-    [2,1,1,1,0,0,0,0,5,5],
-    [0,0,0,1,0,1,1,1,1,5],
-    [0,1,0,0,0,5,5,5,0,0],
-    [0,1,1,0,1,1,1,1,1,0],
-    [0,4,4,0,1,1,1,6,0,0],
-    [1,1,1,1,1,1,1,0,1,1],
-]
+/**
+ * 0 <- empty field
+ * 1 <- wall
+ * 2 <- mario's starting point 
+ * 3 <- star
+ * 4 <- flame flower
+ * 5 <- koopa (bowser)
+ * 6 <- princess
+ */
 
-let initWorld = 
-[
-    [1,0,0,0,0,0,0,0,1,1],
-    [0,3,1,1,0,1,1,0,0,1],
-    [1,1,1,1,0,1,1,1,3,0],
-    [0,0,0,0,0,1,1,1,1,0],
-    [2,1,1,1,0,0,0,0,5,5],
-    [0,0,0,1,0,1,1,1,1,5],
-    [0,1,0,0,0,5,5,5,0,0],
-    [0,1,1,0,1,1,1,1,1,0],
-    [0,4,4,0,1,1,1,6,0,0],
-    [1,1,1,1,1,1,1,0,1,1],
-]
+let world = window.localStorage["world"];
+let initWorld = window.localStorage["world"];
+world = world.split(",")
+initWorld = initWorld.split(",")
+let worldTmp = [];
+let row = [];
+let c = 0
+
+for (let y = 0; y < 10; y++) {
+    row = [];
+    for ( let x = 0; x < 10; x++) {
+        row[x] = world[c]
+        c++;
+    }
+    worldTmp[y] = row
+}
+
+world = deep_copy(worldTmp);
+initWorld = deep_copy(worldTmp);
 
 // Mario's stats
 let mario = {
@@ -67,6 +65,15 @@ let princess = {
     posx: 0,
     posy: 0
 }
+
+// Statistics
+let expandedNodes = []
+let treeDepth = 0;
+let computingTime = 0;
+
+// performance
+let startTime = 0;
+let endTime = 0;
 
 // Tests
 let sol = ["up","right","right","right","right","down","right","right","right","right","right","right",
@@ -274,10 +281,20 @@ function moveMario(dir) {
  */
 
 function endGame() {
+    endTime = performance.now()
+    computingTime = Math.abs(endTime-startTime);
+    // hide container and show the end screen.
     let endScreen = document.getElementById('end-screen');
     let container = document.getElementById('container');
     endScreen.style.display = `flex`;
     container.style.display = `none`;
+    // show the statistics too.
+    console.log(expandedNodes.length)
+    console.log(treeDepth)
+    console.log(computingTime)
+    document.getElementById("expanded_nodes").textContent = `${expandedNodes.length-1}`;
+    document.getElementById("tree_depth").textContent = `${treeDepth}`;
+    document.getElementById("computing_time").textContent = `${Math.round(computingTime)}`;
 }
 
 /**
@@ -286,12 +303,29 @@ function endGame() {
 
 function restartGame() {
     world = deep_copy(initWorld);
+    expandedNodes = []
+    treeDepth = 0;
+    computingTime = 0;
     
     paintWorld(world);
     let endScreen = document.getElementById('end-screen');
     let container = document.getElementById('container');
     endScreen.style.display = `none`;
     container.style.display = `flex`;
+
+    startTime = performance.now()
+
+    let intervalID = setInterval(() => {
+        let prevDir = null
+        if(expandedNodes.length > 0) {
+            prevDir = expandedNodes[expandedNodes.length-1];
+        }
+        avaraAlgorithm(world,prevDir);
+        if(mario.posx == princess.posx && mario.posy == princess.posy) {
+            clearInterval(intervalID);
+            endGame();
+        }
+    }, 1000)
 }
 
 /**
@@ -302,8 +336,60 @@ function restartGame() {
 
 function nextMovement(sol) {
     let nextMov = sol.shift()
-    console.log(sol)
     moveMario(nextMov)
+}
+
+/**
+ * Determines expanded nodes, tree depth and solution of avara's algorithm.
+ * @param {Object} node the world
+ * @param {Number} prevDir previous direction
+ */
+
+function avaraAlgorithm(node, prevDir) {
+    // Let's determine all posible heuristics
+    let impossiblesM = impossibleMovements(mario, node);
+    let heuristics = []
+    // up
+    if(!impossiblesM.includes("up") && prevDir != "down") {
+        let marioCopy = deep_copy(mario);
+        marioCopy.posy -= 1;
+        let heuristic = manhattanDist(marioCopy, princess);
+        heuristics.push({ dir:"up", h:heuristic })
+    }
+    // down
+    if(!impossiblesM.includes("down") && prevDir != "up") {
+        let marioCopy = deep_copy(mario);
+        marioCopy.posy += 1;
+        let heuristic = manhattanDist(marioCopy, princess);
+        heuristics.push({ dir:"down", h:heuristic })
+    }
+    // left
+    if(!impossiblesM.includes("left") && prevDir != "right") {
+        let marioCopy = deep_copy(mario);
+        marioCopy.posx -= 1;
+        let heuristic = manhattanDist(marioCopy, princess);
+        heuristics.push({ dir:"left", h:heuristic })
+    }
+    // right
+    if(!impossiblesM.includes("right") && prevDir != "left") {
+        let marioCopy = deep_copy(mario);
+        marioCopy.posx += 1;
+        let heuristic = manhattanDist(marioCopy, princess);
+        heuristics.push({ dir:"right", h:heuristic })
+    }
+    // calculates the minimum heuristic and expand the tree
+    let min = heuristics[0];
+    for (let i = 0; i < heuristics.length; i++) {
+        if(min.h > heuristics[i].h) {
+            min = heuristics[i]
+        }
+    }
+    expandedNodes.push(min.dir);
+    treeDepth += 1;
+    moveMario(min.dir);
+    // console.log(mario)
+    // console.log(heuristics)
+    // console.log(`dir: ${min.dir}, h: ${min.h}, prevDir: ${prevDir}`)
 }
 
 //====================================================================================
@@ -321,9 +407,15 @@ try{
     // The world is painted at the beginning
     paintWorld(world)
 
+    startTime = performance.now()
+
     // When mario starts to move
     let intervalID = setInterval(() => {
-        nextMovement(sol);
+        let prevDir = null
+        if(expandedNodes.length > 0) {
+            prevDir = expandedNodes[expandedNodes.length-1];
+        }
+        avaraAlgorithm(world,prevDir);
         if(mario.posx == princess.posx && mario.posy == princess.posy) {
             clearInterval(intervalID);
             endGame();
