@@ -22,6 +22,8 @@ const squareSize = 50
 //Sounds
 let audioBackground = new Audio(`../sound/main-theme.mp3`)
 let hereWeGo = new Audio(`../sound/here-we-go.mp3`)
+let fire_ball = new Audio(`../sound/fire_ball_effect.mp3`)
+let shell_stomp = new Audio(`../sound/shell_stomp_effect.mp3`)
 
 //world
 /**
@@ -57,7 +59,11 @@ initWorld = deep_copy(worldTmp);
 // Mario's stats
 let mario = {
     posx: 0,
-    posy: 0
+    posy: 0,
+    items: [],
+    starTime: 0, // attribute used for measuring star's time
+    // useful to identify when an item must be drawn after Mario gets into a cell.
+    rejectedItem: []
 }
 
 // Princess's stats
@@ -231,12 +237,32 @@ function paintWorld(world) {
 /**
  * Draws Mr. Mario with its current position.
  * @param {Object} mario 
- * @param {Object} world 
+ * @param {Object} status - if mario is in ssj mode, type "ssj" otherwise just write "normal" 
  */
 
-function paintMario(mario) {
-    paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"#fa4b2a")
-    showImage(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"mario")
+function paintMario(mario, status) {
+    if(status == "ssj") {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"#FFD208")
+        showImage(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"Super_Star_Mario")
+    }
+    else if(status == "fire-mario") {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"#fa4b2a")
+        showImage(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"Fire_Mario")
+    }
+    else {
+        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"#fa4b2a")
+        showImage(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"mario")
+    }
+}
+
+/**
+ * Paints an item like a flower or a star
+ * @param {String} name
+ * @param {String} color
+ */
+function paintItem(x, y, name, color) {
+    paintSquare(x*squareSize,y*squareSize,squareSize,squareSize,color)
+    showImage(x*squareSize,y*squareSize,squareSize,squareSize,name)
 }
 
 /**
@@ -245,34 +271,143 @@ function paintMario(mario) {
  */
 
 function moveMario(dir) {
+    /**
+     * Manages items in world according to the parameter marioVal.
+     * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand
+     */
+    let manageItems = function(marioVal) {
+        // decreases star time
+        if(mario.starTime > 0)  {
+            mario.starTime -= 1;
+            if(mario.starTime == 0){
+                audioBackground.src = `../sound/main-theme.mp3`
+                audioBackground.currentTime = 0
+                audioBackground.loop = true
+                audioBackground.play()
+            }
+        }
+        // when mario spends an item
+        // star
+        if(mario.items.includes("star") && mario.starTime % 6 == 0){ 
+            mario.items.pop()
+        }
+        // flower
+        if(marioVal == 5 && mario.items.includes("flower")) {
+            fire_ball.currentTime = 0
+            fire_ball.play()
+            mario.items.pop()
+        }
+        // when mario picks an item
+        // star
+        if(marioVal == 3) {
+            if(mario.items.includes("star") || mario.items.length == 0) {
+                audioBackground.src = `../sound/Super_Mario.mp3`
+                audioBackground.currentTime = 0
+                audioBackground.loop = true
+                audioBackground.play()
+                mario.items.push("star");
+                mario.starTime += 6;
+            }
+            else {
+                mario.rejectedItem.push(3);
+            }
+        }
+        // flower
+        if(marioVal == 4) {
+            if(mario.items.includes("flower") || mario.items.length == 0) {
+                mario.items.push("flower");
+            }
+            else {
+                mario.rejectedItem.push(4);
+            }
+        }
+    }
+    /**
+     * Detects when mario meets a koopa and plays sounds effects
+     * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand
+     */
+    let manageKoopas = function(marioVal) {
+        if(marioVal == 5) {
+            if(mario.items.includes("star")) {
+                shell_stomp.currentTime = 0
+                shell_stomp.play()
+            }
+        }
+    }
+    /**
+     * Mario can't hold a flower and a star at the same time. Therefore, we must to take
+     * into account if the previous cell after mario gets into the next cell, will be either empty or with an item.
+     */
+    let movePreviousCell = function() {
+        // Setting the previous Item
+        if(mario.rejectedItem.length > 0) {
+            let name = "";
+            let color = "";
+            if(mario.rejectedItem[0] == 3) {
+                name = "star";
+                color = "yellow";
+            }
+            else if(mario.rejectedItem[0] == 4) {
+                name = "fire-flower";
+                color = "orange";
+            }
+            paintItem(mario.posx, mario.posy, name, color)
+            world[mario.posy][mario.posx] = mario.rejectedItem[0].toString();
+            mario.rejectedItem.pop();
+        }
+        else {
+            mario.recentlyRejected = false;
+            paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white");
+            world[mario.posy][mario.posx] = "0";
+        }
+    }
+    /**
+     * Draws the mario's shape according to his status
+     */
+    let drawMario = function() {
+        if(mario.items.includes("star")) {
+            paintMario(mario,"ssj")
+        }
+        else if(mario.items.includes("flower")) {
+            paintMario(mario,"fire-mario")
+        }
+        else {
+            paintMario(mario,"normal")
+        }
+    }
+    // Logic
     let impossiblesM = impossibleMovements(mario, world);
     if(dir == "up" && !impossiblesM.includes("up")) {
-        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
-        world[mario.posy][mario.posx] = 0;
-        world[mario.posy-1][mario.posx] = 2;
+        movePreviousCell(world[mario.posy-1][mario.posx])
+        manageItems(world[mario.posy-1][mario.posx])
+        manageKoopas(world[mario.posy-1][mario.posx])
+        world[mario.posy-1][mario.posx] = "2";
         mario.posy -= 1;
-        paintMario(mario)
+        drawMario()
     }
     if(dir == "down" && !impossiblesM.includes("down")) {
-        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
-        world[mario.posy][mario.posx] = 0;
-        world[mario.posy+1][mario.posx] = 2;
+        movePreviousCell(world[mario.posy+1][mario.posx])
+        manageItems(world[mario.posy+1][mario.posx])
+        manageKoopas(world[mario.posy+1][mario.posx])
+        world[mario.posy+1][mario.posx] = "2";
         mario.posy += 1;
-        paintMario(mario)
+        drawMario()
     }
     if(dir == "left" && !impossiblesM.includes("left")) {
-        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
-        world[mario.posy][mario.posx] = 0;
-        world[mario.posy][mario.posx-1] = 2;
+        movePreviousCell(world[mario.posy][mario.posx-1])
+        manageItems(world[mario.posy][mario.posx-1])
+        manageKoopas(world[mario.posy][mario.posx-1])
+        world[mario.posy][mario.posx-1] = "2";
         mario.posx -= 1;
-        paintMario(mario)
+        drawMario()
     }
     if(dir == "right" && !impossiblesM.includes("right")) {
-        paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white")
-        world[mario.posy][mario.posx] = 0;
-        world[mario.posy][mario.posx+1] = 2;
+        movePreviousCell(world[mario.posy][mario.posx+1])
+        manageItems(world[mario.posy][mario.posx+1])
+        manageKoopas(world[mario.posy][mario.posx+1])
+        world[mario.posy][mario.posx+1] = "2";
         mario.posx += 1;
-        paintMario(mario)
+        drawMario()
     }
 }
 
@@ -427,7 +562,7 @@ try{
         restartGame();
     })
 
-    // Key listener
+    // // Key listener
     // document.body.addEventListener('keydown', ( event ) => {
     //     if(event.key == "ArrowUp") {
     //         moveMario("up")

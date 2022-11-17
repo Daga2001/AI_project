@@ -28,3 +28,13 @@ The ultimate AI's project developed by Unixvalle members
 - Se cambia la GUI del juego, para que aparezcan las estadisticas en la pantalla del final del juego.
 - Se hace el algoritmo de Agora.
 - Se corrige defecto para reconocer entradas que otorga el usuario en customMap.html.
+
+## Update 1.5
+- Se agregan efectos de sonido para los siguientes movimientos de Mario:
+  - Matar a un koopa con la estrella.
+  - Matar a un koopa con la flor.
+- Cuando Mario posee una estrella, el sonido del ambiente cambia.
+- Mario no puede poseer flores y estrellas a la vez.
+- Mario es capaz de matar a bowser con una flor o estrella.
+- Las flores y estrellas son acumulables.
+- Mario se transforma en Super Star Mario o Fire Mario, para indicar si posee una flor o estrella.
