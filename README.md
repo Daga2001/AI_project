@@ -44,3 +44,6 @@ The ultimate AI's project developed by Unixvalle members
 
 ## Update 1.7
 - Se implementa el algorimo de profundidad evitando ciclos.
+
+## Update 1.8
+- Se corrige algoritmo de avara para evitar ciclos (comparar ambos mainAvara.js).
