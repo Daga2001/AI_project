@@ -40,4 +40,7 @@ The ultimate AI's project developed by Unixvalle members
 - Mario se transforma en Super Star Mario o Fire Mario, para indicar si posee una flor o estrella.
 
 ## Update 1.6
-- Se desarrolla el algoritmo A*
+- Se desarrolla el algoritmo A*.
+
+## Update 1.7
+- Se implementa el algorimo de profundidad evitando ciclos.
