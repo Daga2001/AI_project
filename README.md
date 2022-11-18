@@ -26,7 +26,7 @@ The ultimate AI's project developed by Unixvalle members
 
 ## Update 1.4
 - Se cambia la GUI del juego, para que aparezcan las estadisticas en la pantalla del final del juego.
-- Se hace el algoritmo de Agora.
+- Se hace el algoritmo de Avara.
 - Se corrige defecto para reconocer entradas que otorga el usuario en customMap.html.
 
 ## Update 1.5
@@ -38,3 +38,6 @@ The ultimate AI's project developed by Unixvalle members
 - Mario es capaz de matar a bowser con una flor o estrella.
 - Las flores y estrellas son acumulables.
 - Mario se transforma en Super Star Mario o Fire Mario, para indicar si posee una flor o estrella.
+
+## Update 1.6
+- Se desarrolla el algoritmo A*

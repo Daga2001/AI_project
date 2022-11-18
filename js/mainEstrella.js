@@ -1,7 +1,7 @@
 //====================================================================================
 // LIBRARIES OR OTHER FUNCTIONS
 //====================================================================================
-import { manhattanDist } from './utils.js'
+import { manhattanDist, convertSolutionToList } from './utils.js'
 
 //====================================================================================
 // DECLARATION OF VARIABLES
@@ -66,6 +66,15 @@ let mario = {
     rejectedItem: []
 }
 
+let initMario = {
+    posx: 0,
+    posy: 0,
+    items: [],
+    starTime: 0, // attribute used for measuring star's time
+    // useful to identify when an item must be drawn after Mario gets into a cell.
+    rejectedItem: []
+}
+
 // Princess's stats
 let princess = {
     posx: 0,
@@ -73,13 +82,19 @@ let princess = {
 }
 
 // Statistics
-let expandedNodes = []
-let treeDepth = 0;
+let tree = { 
+    queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: []}],
+    expanded: [],
+    depth: 1
+};
 let computingTime = 0;
 
 // performance
 let startTime = 0;
 let endTime = 0;
+
+// solution
+let optSol = [];
 
 // Tests
 let sol = ["up","right","right","right","right","down","right","right","right","right","right","right",
@@ -266,62 +281,71 @@ function paintItem(x, y, name, color) {
 }
 
 /**
- * Turns mario in a given direction and paints him.
- * @param {String} dir: "up", "down", "left", "right"
+ * Manages items in world according to the parameter marioVal.
+ * @param {Object} mario it can be an object too.
+ * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand.
+ * @param {Boolean} soundActivated this variable is to say if you want to hear sound or not.
  */
-
-function moveMario(dir) {
-    /**
-     * Manages items in world according to the parameter marioVal.
-     * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand
-     */
-    let manageItems = function(marioVal) {
-        // decreases star time
-        if(mario.starTime > 0)  {
-            mario.starTime -= 1;
-            if(mario.starTime == 0){
+function manageItems(mario, marioVal, soundActivated) {
+    // decreases star time
+    if(mario.starTime > 0)  {
+        mario.starTime -= 1;
+        if(mario.starTime == 0){
+            if(soundActivated) {
+                audioBackground.pause()
                 audioBackground.src = `../sound/main-theme.mp3`
                 audioBackground.currentTime = 0
                 audioBackground.loop = true
                 audioBackground.play()
             }
         }
-        // when mario spends an item
-        // star
-        if(mario.items.includes("star") && mario.starTime % 6 == 0){ 
-            mario.items.pop()
-        }
-        // flower
-        if(marioVal == 5 && mario.items.includes("flower")) {
-            fire_ball.currentTime = 0
-            fire_ball.play()
-            mario.items.pop()
-        }
-        // when mario picks an item
-        // star
-        if(marioVal == 3) {
-            if(mario.items.includes("star") || mario.items.length == 0) {
+    }
+    // when mario spends an item
+    // star
+    if(mario.items.includes("star") && mario.starTime % 6 == 0){ 
+        mario.items.pop()
+    }
+    // flower
+    if(marioVal == 5 && mario.items.includes("flower")) {
+        fire_ball.currentTime = 0
+        fire_ball.play()
+        mario.items.pop()
+    }
+    // when mario picks an item
+    // star
+    if(marioVal == 3) {
+        if(mario.items.includes("star") || mario.items.length == 0) {
+            if(soundActivated) {
+                audioBackground.pause()
                 audioBackground.src = `../sound/Super_Mario.mp3`
                 audioBackground.currentTime = 0
                 audioBackground.loop = true
                 audioBackground.play()
-                mario.items.push("star");
-                mario.starTime += 6;
             }
-            else {
-                mario.rejectedItem.push(3);
-            }
+            mario.items.push("star");
+            mario.starTime += 6;
         }
-        // flower
-        if(marioVal == 4) {
-            if(mario.items.includes("flower") || mario.items.length == 0) {
-                mario.items.push("flower");
-            }
-            else {
-                mario.rejectedItem.push(4);
-            }
+        else {
+            mario.rejectedItem.push(3);
         }
     }
+    // flower
+    if(marioVal == 4) {
+        if(mario.items.includes("flower") || mario.items.length == 0) {
+            mario.items.push("flower");
+        }
+        else {
+            mario.rejectedItem.push(4);
+        }
+    }
+}
+
+/**
+ * Turns mario in a given direction and paints him.
+ * @param {String} dir: "up", "down", "left", "right"
+ */
+
+function moveMario(dir) {
     /**
      * Detects when mario meets a koopa and plays sounds effects
      * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand
@@ -379,7 +403,7 @@ function moveMario(dir) {
     let impossiblesM = impossibleMovements(mario, world);
     if(dir == "up" && !impossiblesM.includes("up")) {
         movePreviousCell(world[mario.posy-1][mario.posx])
-        manageItems(world[mario.posy-1][mario.posx])
+        manageItems(mario, world[mario.posy-1][mario.posx], true)
         manageKoopas(world[mario.posy-1][mario.posx])
         world[mario.posy-1][mario.posx] = "2";
         mario.posy -= 1;
@@ -387,7 +411,7 @@ function moveMario(dir) {
     }
     if(dir == "down" && !impossiblesM.includes("down")) {
         movePreviousCell(world[mario.posy+1][mario.posx])
-        manageItems(world[mario.posy+1][mario.posx])
+        manageItems(mario, world[mario.posy+1][mario.posx], true)
         manageKoopas(world[mario.posy+1][mario.posx])
         world[mario.posy+1][mario.posx] = "2";
         mario.posy += 1;
@@ -395,7 +419,7 @@ function moveMario(dir) {
     }
     if(dir == "left" && !impossiblesM.includes("left")) {
         movePreviousCell(world[mario.posy][mario.posx-1])
-        manageItems(world[mario.posy][mario.posx-1])
+        manageItems(mario, world[mario.posy][mario.posx-1], true)
         manageKoopas(world[mario.posy][mario.posx-1])
         world[mario.posy][mario.posx-1] = "2";
         mario.posx -= 1;
@@ -403,7 +427,7 @@ function moveMario(dir) {
     }
     if(dir == "right" && !impossiblesM.includes("right")) {
         movePreviousCell(world[mario.posy][mario.posx+1])
-        manageItems(world[mario.posy][mario.posx+1])
+        manageItems(mario, world[mario.posy][mario.posx+1], true)
         manageKoopas(world[mario.posy][mario.posx+1])
         world[mario.posy][mario.posx+1] = "2";
         mario.posx += 1;
@@ -424,11 +448,8 @@ function endGame() {
     endScreen.style.display = `flex`;
     container.style.display = `none`;
     // show the statistics too.
-    console.log(expandedNodes.length)
-    console.log(treeDepth)
-    console.log(computingTime)
-    document.getElementById("expanded_nodes").textContent = `${expandedNodes.length-1}`;
-    document.getElementById("tree_depth").textContent = `${treeDepth}`;
+    document.getElementById("expanded_nodes").textContent = `${tree.expanded.length}`;
+    document.getElementById("tree_depth").textContent = `${tree.depth}`;
     document.getElementById("computing_time").textContent = `${Math.round(computingTime)}`;
 }
 
@@ -438,8 +459,12 @@ function endGame() {
 
 function restartGame() {
     world = deep_copy(initWorld);
-    expandedNodes = []
-    treeDepth = 0;
+    mario = deep_copy(initMario);
+    tree = { 
+        queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: []}],
+        expanded: [],
+        depth: 1
+    };
     computingTime = 0;
     
     paintWorld(world);
@@ -449,18 +474,16 @@ function restartGame() {
     container.style.display = `flex`;
 
     startTime = performance.now()
+    sol = starAlgorithm(deep_copy(mario), world, null);
+    sol = convertSolutionToList(sol);
 
     let intervalID = setInterval(() => {
-        let prevDir = null
-        if(expandedNodes.length > 0) {
-            prevDir = expandedNodes[expandedNodes.length-1];
-        }
-        avaraAlgorithm(world,prevDir);
+        nextMovement(sol)
         if(mario.posx == princess.posx && mario.posy == princess.posy) {
             clearInterval(intervalID);
             endGame();
         }
-    }, 1000)
+    }, 1000) 
 }
 
 /**
@@ -527,12 +550,233 @@ function avaraAlgorithm(node, prevDir) {
     // console.log(`dir: ${min.dir}, h: ${min.h}, prevDir: ${prevDir}`)
 }
 
+/**
+ * Determines expanded nodes, tree depth and solution of star's algorithm.
+ * @param {Object} mario
+ * @param {Number} prevDir previous direction
+ */
+
+function starAlgorithm(mario, node, prevDir) {
+    // ==============================================================
+    // Variables and functions
+    // ==============================================================
+    let impossiblesM = impossibleMovements(mario, node);
+    /**
+     * Calculates the minimum weight of a tree's queue.
+     * @param {List} queue 
+     * @returns Node
+     */
+    let minimum = function (queue) {
+        let mini = 0;
+        for(let i = 1; i < queue.length; i++) {
+            let h1 = manhattanDist(queue[i], princess);
+            let h2 = manhattanDist(queue[mini], princess);
+            if(queue[i].g + h1 < queue[mini].g + h2) {
+                mini = i;
+            }
+        }
+        return queue.splice(mini,1)[0];
+    }
+    /**
+     * Determines the cost of the movement.
+     * @param {Number} valDir - value of cell where mario's gonna stay.
+     * @returns Cost
+     */
+    let g = function (node, valDir) {
+        if(node.items.includes("star")) {
+            return 1/2;
+        }
+        if(node.items.includes("flower")) {
+            return 1;
+        }
+        else {
+            if(valDir == 3 || valDir == 4 || valDir == 0) {
+                return 1;
+            }
+            if(valDir == 5) {
+                return 6;
+            }
+        }
+    }
+    // ==============================================================
+    // Body
+    // ==============================================================
+    // --------------------------------------------------------------
+    // starting up with inital values
+    // --------------------------------------------------------------
+    // up
+    if(!impossiblesM.includes("up") && prevDir != "down") {
+        let object = { 
+            parent: tree.queue[0],
+            posx: mario.posx, 
+            posy: mario.posy-1,
+            dir: "up", 
+            val: node[mario.posy-1][mario.posx],
+            g: tree.queue[0].g + g(mario, node[mario.posy-1][mario.posx]), 
+            depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
+        }
+        manageItems(object, node[object.posy][object.posx], false)
+        tree.queue.push(object);
+    }
+    // down
+    if(!impossiblesM.includes("down") && prevDir != "up") {
+        let object = { 
+            parent: tree.queue[0], 
+            posx: mario.posx, 
+            posy: mario.posy+1,
+            dir: "down", 
+            val: node[mario.posy+1][mario.posx], 
+            g: tree.queue[0].g + g(mario, node[mario.posy+1][mario.posx]), 
+            depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
+        }
+        manageItems(object, node[object.posy][object.posx], false)
+        tree.queue.push(object);
+    }
+    // left
+    if(!impossiblesM.includes("left") && prevDir != "right") {
+        let object = { 
+            parent: tree.queue[0], 
+            posx: mario.posx-1, 
+            posy: mario.posy,
+            dir: "left", 
+            val: node[mario.posy][mario.posx-1],
+            g: tree.queue[0].g + g(mario, node[mario.posy][mario.posx-1]), 
+            depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
+        }
+        manageItems(object, node[object.posy][object.posx], false)
+        tree.queue.push(object);
+    }
+    // right
+    if(!impossiblesM.includes("right") && prevDir != "left") {
+        let object = { 
+            parent: tree.queue[0], 
+            posx: mario.posx+1, 
+            posy: mario.posy,
+            dir: "right", 
+            val: node[mario.posy][mario.posx+1],
+            g: tree.queue[0].g + g(mario, node[mario.posy][mario.posx+1]), 
+            depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
+        }
+        manageItems(object, node[object.posy][object.posx], false)
+        tree.queue.push(object);
+    }
+    let expandedN = tree.queue.shift();
+    tree.expanded.push(expandedN);
+    // increases the depth
+    if(tree.depth < tree.queue[0].depth){
+        tree.depth = tree.queue[0].depth;
+    }
+    // --------------------------------------------------------------
+    // while loop to extend nodes
+    // --------------------------------------------------------------
+    let c = 0;
+    while(true) {
+        c++;
+        let parentNode = minimum(tree.queue)
+        impossiblesM = impossibleMovements(parentNode, node);
+        if(parentNode.val == "6")  {
+            return parentNode;
+        }
+        prevDir = parentNode.dir
+        // up
+        if(!impossiblesM.includes("up") && prevDir != "down") {
+            let parentNodeCopy = deep_copy(parentNode)
+            let object = { 
+                parent: parentNodeCopy, 
+                posx: parentNodeCopy.posx, 
+                posy: parentNodeCopy.posy-1,
+                dir: "up", 
+                val: node[parentNodeCopy.posy-1][parentNodeCopy.posx],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy-1][parentNodeCopy.posx]), 
+                depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
+            }
+            manageItems(object, node[object.posy][object.posx], false)
+            tree.queue.push(object);
+        }
+        // down
+        if(!impossiblesM.includes("down") && prevDir != "up") {
+            let parentNodeCopy = deep_copy(parentNode)
+            let object = { 
+                parent: parentNodeCopy, 
+                posx: parentNodeCopy.posx, 
+                posy: parentNodeCopy.posy+1,
+                dir: "down", 
+                val: node[parentNodeCopy.posy+1][parentNodeCopy.posx],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy+1][parentNodeCopy.posx]), 
+                depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
+            }
+            manageItems(object, node[object.posy][object.posx], false)
+            tree.queue.push(object);
+        }
+        // left
+        if(!impossiblesM.includes("left") && prevDir != "right") {
+            let parentNodeCopy = deep_copy(parentNode)
+            let object = { 
+                parent: parentNodeCopy, 
+                posx: parentNodeCopy.posx-1, 
+                posy: parentNodeCopy.posy,
+                dir: "left", 
+                val: node[parentNodeCopy.posy][parentNodeCopy.posx-1],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy][parentNodeCopy.posx-1]), 
+                depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
+            }
+            manageItems(object, node[object.posy][object.posx], false)
+            tree.queue.push(object);
+        }
+        // right
+        if(!impossiblesM.includes("right") && prevDir != "left") {
+            let parentNodeCopy = deep_copy(parentNode)
+            let object = { 
+                parent: parentNodeCopy, 
+                posx: parentNodeCopy.posx+1, 
+                posy: parentNodeCopy.posy,
+                dir: "right", 
+                val: node[parentNodeCopy.posy][parentNodeCopy.posx+1],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy][parentNodeCopy.posx+1]), 
+                depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
+            }
+            manageItems(object, node[object.posy][object.posx], false)
+            tree.queue.push(object);
+        }
+        tree.expanded.push(parentNode)
+        // increases the depth
+        if(tree.depth < parentNode.depth){
+            tree.depth = parentNode.depth;
+        }
+    }
+}
+
 //====================================================================================
 // logical structure
 //====================================================================================
 
 try{
     // Plays the background music
+    audioBackground.pause()
     audioBackground.currentTime = 0
     audioBackground.loop = true
     audioBackground.play()
@@ -542,28 +786,42 @@ try{
     // The world is painted at the beginning
     paintWorld(world)
 
-    startTime = performance.now()
+    // startTime = performance.now()
+
+    sol = starAlgorithm(deep_copy(mario), world, null);
+    sol = convertSolutionToList(sol);
+    // console.log(sol);
+    // console.log(tree);
 
     // When mario starts to move
     let intervalID = setInterval(() => {
-        let prevDir = null
-        if(expandedNodes.length > 0) {
-            prevDir = expandedNodes[expandedNodes.length-1];
-        }
-        avaraAlgorithm(world,prevDir);
+        nextMovement(sol)
         if(mario.posx == princess.posx && mario.posy == princess.posy) {
             clearInterval(intervalID);
             endGame();
         }
-    }, 1000)    
+    }, 1000) 
 
     // Button listener
     restartButton.addEventListener('mousedown', () => {
         restartGame();
     })
+       
+    // let intervalID = setInterval(() => {
+    //     let prevDir = null
+    //     if(expandedNodes.length > 0) {
+    //         prevDir = expandedNodes[expandedNodes.length-1];
+    //     }
+    //     avaraAlgorithm(world,prevDir);
+    //     if(mario.posx == princess.posx && mario.posy == princess.posy) {
+    //         clearInterval(intervalID);
+    //         endGame();
+    //     }
+    // }, 1000)    
 
     // // Key listener
     // document.body.addEventListener('keydown', ( event ) => {
+    //     console.log(mario)
     //     if(event.key == "ArrowUp") {
     //         moveMario("up")
     //     }
