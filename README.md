@@ -47,3 +47,8 @@ The ultimate AI's project developed by Unixvalle members
 
 ## Update 1.8
 - Se corrige algoritmo de avara para evitar ciclos (comparar ambos mainAvara.js).
+
+## Update 1.9
+- Se mejora el sonido del ambiente, cada vez que mario tome una estrella, no va a reiniciarse la canción de Super Star Mario.
+- Se implementa el algoritmo de amplitud. (hay que revisar las 2 alternativas en la siguiente sesión)
+- Se añaden funciones a utils.js que son necesarias para todos los archivos de JavaScript, con el fin de mantener un mejor orden en la implementación de código.

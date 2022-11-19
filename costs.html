@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/game.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Rancho&effect=fire-animation">
+  <title>Mario Smart</title>
+</head>
+<body>
+  <!-- the end -->
+  <div id="end-screen" class="end-screen">
+    <div class="screen-pop-up">
+      <p class="end-title font-effect-fire-animation">CONGRATULATIONS!</p>
+      <div class="end-header">
+        <img class="end-img" src="./images/endGame1.jpg">        
+      </div>
+      <div class="end-bottom">
+        <a id="back-menu-btn" class="end-btn" href="./">back menu</a>
+        <button id="restart-game-btn" class="end-btn">restart game</button>
+      </div>
+    </div>
+    <div class="container__information">
+      <h1 class="nodes">Expanded nodes</h1>
+      <div id="expanded_nodes" class="expanded_nodes">100</div>
+      <h1 class="depth">Tree depth</h1>
+      <div id="tree_depth" class="three_depth">100</div>
+      <h1 class="time">Computing time</h1>
+      <div id="computing_time" class="computing_time">100</div>
+    </div>
+  </div>
+  <!-- game -->
+  <div id="container" class="container">
+
+    <h1 class="container__title">MARIO SMART</h1>
+
+    <div class="container__game">
+      
+      <canvas class="canvas">
+        <canvas class="vanvas_2"></canvas>
+      </canvas>
+
+    </div>
+    </div>
+  </div>
+  <script type="module" src="./js/mainCosts.js"></script>
+  <!-- <script type="text/javascript" src="./js/main_2.js"></script> -->
+</body>
+</html>
