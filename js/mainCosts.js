@@ -83,7 +83,7 @@ let princess = {
 
 // Statistics
 let tree = { 
-    queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, depth: 1}],
+    queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: []}],
     expanded: [],
     depth: 1
 };
@@ -95,9 +95,6 @@ let endTime = 0;
 
 // solution
 let optSol = [];
-
-// order of operators
-let order = ["up","down","left","right"];
 
 // Tests
 let sol = ["up","right","right","right","right","down","right","right","right","right","right","right",
@@ -272,8 +269,8 @@ function manageItems(mario, marioVal, soundActivated) {
     // decreases star time
     if(mario.starTime > 0)  {
         mario.starTime -= 1;
-        if(mario.starTime == 0){
-            if(soundActivated && !audioBackground.src.includes(`main-theme.mp3`)) {
+        if(mario.starTime == 0) {
+            if(soundActivated && !audioBackground.src == `../sound/main-theme.mp3`) {
                 audioBackground.pause()
                 audioBackground.src = `../sound/main-theme.mp3`
                 audioBackground.currentTime = 0
@@ -461,7 +458,7 @@ function restartGame() {
     audioBackground.play()
 
     startTime = performance.now()
-    sol = depthAlgorithm(util.deep_copy(mario), world, null);
+    sol = costsAlgorithm(util.deep_copy(mario), world, null);
     endTime = performance.now()
     sol = util.convertSolutionToList(sol);
 
@@ -486,104 +483,50 @@ function nextMovement(sol) {
 }
 
 /**
- * Determines expanded nodes, tree depth and solution of avara's algorithm.
- * @param {Object} node the world
- * @param {Number} prevDir previous direction
- */
-
-function avaraAlgorithm(node, prevDir) {
-    // Let's determine all posible heuristics
-    let impossiblesM = impossibleMovements(mario, node);
-    let heuristics = []
-    // up
-    if(!impossiblesM.includes("up") && prevDir != "down") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posy -= 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"up", h:heuristic })
-    }
-    // down
-    if(!impossiblesM.includes("down") && prevDir != "up") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posy += 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"down", h:heuristic })
-    }
-    // left
-    if(!impossiblesM.includes("left") && prevDir != "right") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posx -= 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"left", h:heuristic })
-    }
-    // right
-    if(!impossiblesM.includes("right") && prevDir != "left") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posx += 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"right", h:heuristic })
-    }
-    // calculates the minimum heuristic and expand the tree
-    let min = heuristics[0];
-    for (let i = 0; i < heuristics.length; i++) {
-        if(min.h > heuristics[i].h) {
-            min = heuristics[i]
-        }
-    }
-    expandedNodes.push(min.dir);
-    treeDepth += 1;
-    moveMario(min.dir);
-    // console.log(mario)
-    // console.log(heuristics)
-    // console.log(`dir: ${min.dir}, h: ${min.h}, prevDir: ${prevDir}`)
-}
-
-/**
- * Determines expanded nodes, tree depth and solution of depth's algorithm.
+ * Determines expanded nodes, tree depth and solution of Costs's algorithm.
  * @param {Object} mario
  * @param {Number} prevDir previous direction
  */
 
-function depthAlgorithm(mario, node, prevDir) {
+function costsAlgorithm(mario, node, prevDir) {
     // ==============================================================
     // Variables and functions
     // ==============================================================
     let impossiblesM = impossibleMovements(mario, node);
     /**
-     * Determines whenever a nodes has been expanded.
-     * @param {Object} node 
-     * @return boolean
+     * Calculates the minimum weight of a tree's queue.
+     * @param {List} queue 
+     * @returns Node
      */
-    let parentIsRepeated = function(node) {
-        for(let i = 0; i < tree.expanded.length; i++) {
-            if(tree.expanded[i].posx == node.posx &&
-               tree.expanded[i].posy == node.posy) {
-                return true;
-               }
-        }
-        return false;
-    }
-    /**
-     * Determines which node must be expanded with a given list with the order of operators
-     * @param {List} order order of operators
-     */ 
-    let nextNode = function (queue, order) {
-        let next = null;
-        if(order != null) {
-            for(let i = 0; i < order.length; i++) {
-                for(let j = 0; j < queue.length; j++){
-                    let node = queue[j];        
-                    if(node.dir == order[i]) {
-                        next = j;
-                        return queue.splice(next,1)[0];
-                    }
-                }
+    let minimum = function (queue) {
+        let mini = 0;
+        for(let i = 1; i < queue.length; i++) {
+            if(queue[i].g < queue[mini].g) {
+                mini = i;
             }
         }
-        else {
-            return queue.shift()
+        return queue.splice(mini,1)[0];
+    }
+    /**
+     * Determines the cost of the movement.
+     * @param {Number} valDir - value of cell where mario's gonna stay.
+     * @returns Cost
+     */
+    let g = function (node, valDir) {
+        if(node.items.includes("star")) {
+            return 1/2;
         }
-        return next;
+        if(node.items.includes("flower")) {
+            return 1;
+        }
+        else {
+            if(valDir == 3 || valDir == 4 || valDir == 0) {
+                return 1;
+            }
+            if(valDir == 5) {
+                return 6;
+            }
+        }
     }
     // ==============================================================
     // Body
@@ -598,10 +541,14 @@ function depthAlgorithm(mario, node, prevDir) {
             posx: mario.posx, 
             posy: mario.posy-1,
             dir: "up", 
-            val: node[mario.posy-1][mario.posx], 
+            val: node[mario.posy-1][mario.posx],
+            g: tree.queue[0].g + g(mario, node[mario.posy-1][mario.posx]), 
             depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
         }
-
+        manageItems(object, node[object.posy][object.posx], false)
         tree.queue.push(object);
     }
     // down
@@ -612,9 +559,13 @@ function depthAlgorithm(mario, node, prevDir) {
             posy: mario.posy+1,
             dir: "down", 
             val: node[mario.posy+1][mario.posx], 
+            g: tree.queue[0].g + g(mario, node[mario.posy+1][mario.posx]), 
             depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
         }
-
+        manageItems(object, node[object.posy][object.posx], false)
         tree.queue.push(object);
     }
     // left
@@ -624,9 +575,14 @@ function depthAlgorithm(mario, node, prevDir) {
             posx: mario.posx-1, 
             posy: mario.posy,
             dir: "left", 
-            val: node[mario.posy][mario.posx-1], 
+            val: node[mario.posy][mario.posx-1],
+            g: tree.queue[0].g + g(mario, node[mario.posy][mario.posx-1]), 
             depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
         }
+        manageItems(object, node[object.posy][object.posx], false)
         tree.queue.push(object);
     }
     // right
@@ -636,9 +592,14 @@ function depthAlgorithm(mario, node, prevDir) {
             posx: mario.posx+1, 
             posy: mario.posy,
             dir: "right", 
-            val: node[mario.posy][mario.posx+1], 
+            val: node[mario.posy][mario.posx+1],
+            g: tree.queue[0].g + g(mario, node[mario.posy][mario.posx+1]), 
             depth: tree.queue[0].depth + 1,
+            items: mario.items, 
+            starTime: mario.starTime, 
+            rejectedItem: mario.rejectedItem
         }
+        manageItems(object, node[object.posy][object.posx], false)
         tree.queue.push(object);
     }
     let expandedN = tree.queue.shift();
@@ -653,62 +614,82 @@ function depthAlgorithm(mario, node, prevDir) {
     let c = 0;
     while(true) {
         c++;
-        let parentNode = nextNode(tree.queue, order);
+        let parentNode = minimum(tree.queue)
         impossiblesM = impossibleMovements(parentNode, node);
         if(parentNode.val == "6")  {
             return parentNode;
         }
         prevDir = parentNode.dir
         // up
-        if(!impossiblesM.includes("up") && prevDir != "down" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("up") && prevDir != "down") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx, 
                 posy: parentNodeCopy.posy-1,
                 dir: "up", 
-                val: node[parentNodeCopy.posy-1][parentNodeCopy.posx], 
+                val: node[parentNodeCopy.posy-1][parentNodeCopy.posx],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy-1][parentNodeCopy.posx]), 
                 depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
             }
+            manageItems(object, node[object.posy][object.posx], false)
             tree.queue.push(object);
         }
         // down
-        if(!impossiblesM.includes("down") && prevDir != "up" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("down") && prevDir != "up") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx, 
                 posy: parentNodeCopy.posy+1,
                 dir: "down", 
-                val: node[parentNodeCopy.posy+1][parentNodeCopy.posx], 
+                val: node[parentNodeCopy.posy+1][parentNodeCopy.posx],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy+1][parentNodeCopy.posx]), 
                 depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
             }
+            manageItems(object, node[object.posy][object.posx], false)
             tree.queue.push(object);
         }
         // left
-        if(!impossiblesM.includes("left") && prevDir != "right" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("left") && prevDir != "right") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx-1, 
                 posy: parentNodeCopy.posy,
                 dir: "left", 
-                val: node[parentNodeCopy.posy][parentNodeCopy.posx-1], 
+                val: node[parentNodeCopy.posy][parentNodeCopy.posx-1],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy][parentNodeCopy.posx-1]), 
                 depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
             }
+            manageItems(object, node[object.posy][object.posx], false)
             tree.queue.push(object);
         }
         // right
-        if(!impossiblesM.includes("right") && prevDir != "left" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("right") && prevDir != "left") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx+1, 
                 posy: parentNodeCopy.posy,
                 dir: "right", 
-                val: node[parentNodeCopy.posy][parentNodeCopy.posx+1], 
+                val: node[parentNodeCopy.posy][parentNodeCopy.posx+1],
+                g: parentNodeCopy.g + g(parentNodeCopy, node[parentNodeCopy.posy][parentNodeCopy.posx+1]), 
                 depth: parentNodeCopy.depth + 1,
+                items: parentNodeCopy.items, 
+                starTime: parentNodeCopy.starTime, 
+                rejectedItem: parentNodeCopy.rejectedItem
             }
+            manageItems(object, node[object.posy][object.posx], false)
             tree.queue.push(object);
         }
         tree.expanded.push(parentNode)
@@ -736,11 +717,11 @@ try{
     paintWorld(world)
 
     startTime = performance.now()
-    sol = depthAlgorithm(util.deep_copy(mario), world, null);
+    sol = costsAlgorithm(util.deep_copy(mario), world, null);
     endTime = performance.now()
     sol = util.convertSolutionToList(sol);
-    // console.log(sol)
-    // console.log(tree)
+    // console.log(sol);
+    // console.log(tree);
 
     // When mario starts to move
     let intervalID = setInterval(() => {

@@ -461,7 +461,7 @@ function restartGame() {
     audioBackground.play()
 
     startTime = performance.now()
-    sol = depthAlgorithm(util.deep_copy(mario), world, null);
+    sol = breadthAlgorithm(util.deep_copy(mario), world, null);
     endTime = performance.now()
     sol = util.convertSolutionToList(sol);
 
@@ -486,83 +486,16 @@ function nextMovement(sol) {
 }
 
 /**
- * Determines expanded nodes, tree depth and solution of avara's algorithm.
- * @param {Object} node the world
- * @param {Number} prevDir previous direction
- */
-
-function avaraAlgorithm(node, prevDir) {
-    // Let's determine all posible heuristics
-    let impossiblesM = impossibleMovements(mario, node);
-    let heuristics = []
-    // up
-    if(!impossiblesM.includes("up") && prevDir != "down") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posy -= 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"up", h:heuristic })
-    }
-    // down
-    if(!impossiblesM.includes("down") && prevDir != "up") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posy += 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"down", h:heuristic })
-    }
-    // left
-    if(!impossiblesM.includes("left") && prevDir != "right") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posx -= 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"left", h:heuristic })
-    }
-    // right
-    if(!impossiblesM.includes("right") && prevDir != "left") {
-        let marioCopy = util.deep_copy(mario);
-        marioCopy.posx += 1;
-        let heuristic = util.manhattanDist(marioCopy, princess);
-        heuristics.push({ dir:"right", h:heuristic })
-    }
-    // calculates the minimum heuristic and expand the tree
-    let min = heuristics[0];
-    for (let i = 0; i < heuristics.length; i++) {
-        if(min.h > heuristics[i].h) {
-            min = heuristics[i]
-        }
-    }
-    expandedNodes.push(min.dir);
-    treeDepth += 1;
-    moveMario(min.dir);
-    // console.log(mario)
-    // console.log(heuristics)
-    // console.log(`dir: ${min.dir}, h: ${min.h}, prevDir: ${prevDir}`)
-}
-
-/**
- * Determines expanded nodes, tree depth and solution of depth's algorithm.
+ * Determines expanded nodes, tree depth and solution of Breadth's algorithm.
  * @param {Object} mario
  * @param {Number} prevDir previous direction
  */
 
-function depthAlgorithm(mario, node, prevDir) {
+function breadthAlgorithm(mario, node, prevDir) {
     // ==============================================================
     // Variables and functions
     // ==============================================================
     let impossiblesM = impossibleMovements(mario, node);
-    /**
-     * Determines whenever a nodes has been expanded.
-     * @param {Object} node 
-     * @return boolean
-     */
-    let parentIsRepeated = function(node) {
-        for(let i = 0; i < tree.expanded.length; i++) {
-            if(tree.expanded[i].posx == node.posx &&
-               tree.expanded[i].posy == node.posy) {
-                return true;
-               }
-        }
-        return false;
-    }
     /**
      * Determines which node must be expanded with a given list with the order of operators
      * @param {List} order order of operators
@@ -653,14 +586,14 @@ function depthAlgorithm(mario, node, prevDir) {
     let c = 0;
     while(true) {
         c++;
-        let parentNode = nextNode(tree.queue, order);
+        let parentNode = nextNode(tree.queue);
         impossiblesM = impossibleMovements(parentNode, node);
         if(parentNode.val == "6")  {
             return parentNode;
         }
         prevDir = parentNode.dir
         // up
-        if(!impossiblesM.includes("up") && prevDir != "down" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("up") && prevDir != "down") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
@@ -673,7 +606,7 @@ function depthAlgorithm(mario, node, prevDir) {
             tree.queue.push(object);
         }
         // down
-        if(!impossiblesM.includes("down") && prevDir != "up" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("down") && prevDir != "up") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
@@ -686,7 +619,7 @@ function depthAlgorithm(mario, node, prevDir) {
             tree.queue.push(object);
         }
         // left
-        if(!impossiblesM.includes("left") && prevDir != "right" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("left") && prevDir != "right") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
@@ -699,7 +632,7 @@ function depthAlgorithm(mario, node, prevDir) {
             tree.queue.push(object);
         }
         // right
-        if(!impossiblesM.includes("right") && prevDir != "left" && !parentIsRepeated(parentNode)) {
+        if(!impossiblesM.includes("right") && prevDir != "left") {
             let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
@@ -736,11 +669,11 @@ try{
     paintWorld(world)
 
     startTime = performance.now()
-    sol = depthAlgorithm(util.deep_copy(mario), world, null);
+    sol = breadthAlgorithm(util.deep_copy(mario), world, null);
     endTime = performance.now()
     sol = util.convertSolutionToList(sol);
-    // console.log(sol)
-    // console.log(tree)
+    console.log(sol)
+    console.log(tree)
 
     // When mario starts to move
     let intervalID = setInterval(() => {

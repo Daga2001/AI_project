@@ -1,7 +1,7 @@
 //====================================================================================
 // LIBRARIES OR OTHER FUNCTIONS
 //====================================================================================
-import { manhattanDist, convertSolutionToList } from './utils.js'
+import * as util from './utils.js'
 
 //====================================================================================
 // DECLARATION OF VARIABLES
@@ -53,8 +53,8 @@ for (let y = 0; y < 10; y++) {
     worldTmp[y] = row
 }
 
-world = deep_copy(worldTmp);
-initWorld = deep_copy(worldTmp);
+world = util.deep_copy(worldTmp);
+initWorld = util.deep_copy(worldTmp);
 
 // Mario's stats
 let mario = {
@@ -106,27 +106,6 @@ let sol = ["up","right","right","right","right","down","right","right","right","
 //====================================================================================
 // DECLARATION OF FUNCTIONS OR METHODS
 //====================================================================================
-
-/**
- * sleeps the program while is executing with a given delay in miliseconds.
- * @param {Number} delay 
- */
-
-function sleep(delay) {
-    var start = new Date().getTime();
-    while (new Date().getTime() < start + delay);
-}
-
-/**
- * Makes a deep copy of an object. 
- * A deep copy of an object is a copy whose properties do not share the same references.
- * @param {*} object 
- * @returns 
- */
-
-function deep_copy(object) {
-    return JSON.parse(JSON.stringify(object));
-}
 
 /**
  * Abstracts all imposible movements from mario's position.
@@ -294,7 +273,7 @@ function manageItems(mario, marioVal, soundActivated) {
     if(mario.starTime > 0)  {
         mario.starTime -= 1;
         if(mario.starTime == 0){
-            if(soundActivated) {
+            if(soundActivated && !audioBackground.src.includes(`main-theme.mp3`)) {
                 audioBackground.pause()
                 audioBackground.src = `../sound/main-theme.mp3`
                 audioBackground.currentTime = 0
@@ -318,7 +297,7 @@ function manageItems(mario, marioVal, soundActivated) {
     // star
     if(marioVal == 3) {
         if(mario.items.includes("star") || mario.items.length == 0) {
-            if(soundActivated) {
+            if(soundActivated && !audioBackground.src.includes(`Super_Mario.mp3`)) {
                 audioBackground.pause()
                 audioBackground.src = `../sound/Super_Mario.mp3`
                 audioBackground.currentTime = 0
@@ -443,7 +422,6 @@ function moveMario(dir) {
  */
 
 function endGame() {
-    endTime = performance.now()
     computingTime = Math.abs(endTime-startTime);
     // hide container and show the end screen.
     let endScreen = document.getElementById('end-screen');
@@ -453,7 +431,7 @@ function endGame() {
     // show the statistics too.
     document.getElementById("expanded_nodes").textContent = `${tree.expanded.length}`;
     document.getElementById("tree_depth").textContent = `${tree.depth}`;
-    document.getElementById("computing_time").textContent = `${Math.round(computingTime)}`;
+    document.getElementById("computing_time").textContent = `${util.truncateDecimals(computingTime,4)} ms`;
 }
 
 /**
@@ -461,8 +439,8 @@ function endGame() {
  */
 
 function restartGame() {
-    world = deep_copy(initWorld);
-    mario = deep_copy(initMario);
+    world = util.deep_copy(initWorld);
+    mario = util.deep_copy(initMario);
     tree = { 
         queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: []}],
         expanded: [],
@@ -477,8 +455,9 @@ function restartGame() {
     container.style.display = `flex`;
 
     startTime = performance.now()
-    sol = avaraAlgorithm(deep_copy(mario), world, null);
-    sol = convertSolutionToList(sol);
+    sol = avaraAlgorithm(util.deep_copy(mario), world, null);
+    endTime = performance.now()
+    sol = util.convertSolutionToList(sol);
 
     let intervalID = setInterval(() => {
         nextMovement(sol)
@@ -501,7 +480,7 @@ function nextMovement(sol) {
 }
 
 /**
- * Determines expanded nodes, tree depth and solution of depth's algorithm.
+ * Determines expanded nodes, tree depth and solution of Avara's algorithm.
  * @param {Object} mario
  * @param {Number} prevDir previous direction
  */
@@ -531,9 +510,9 @@ function avaraAlgorithm(mario, node, prevDir) {
      */ 
     let nextNode = function (queue) {
         let mini = 0;
-        let minHeuristic = manhattanDist(queue[0], princess);
+        let minHeuristic = util.manhattanDist(queue[0], princess);
         for(let i = 1; i < queue.length; i++){
-            let heuristic = manhattanDist(queue[i], princess);
+            let heuristic = util.manhattanDist(queue[i], princess);
             if(heuristic < minHeuristic) {
                 minHeuristic = heuristic;
                 mini = i;
@@ -617,7 +596,7 @@ function avaraAlgorithm(mario, node, prevDir) {
         prevDir = parentNode.dir
         // up
         if(!impossiblesM.includes("up") && prevDir != "down" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = deep_copy(parentNode)
+            let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx, 
@@ -630,7 +609,7 @@ function avaraAlgorithm(mario, node, prevDir) {
         }
         // down
         if(!impossiblesM.includes("down") && prevDir != "up" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = deep_copy(parentNode)
+            let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx, 
@@ -643,7 +622,7 @@ function avaraAlgorithm(mario, node, prevDir) {
         }
         // left
         if(!impossiblesM.includes("left") && prevDir != "right" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = deep_copy(parentNode)
+            let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx-1, 
@@ -656,7 +635,7 @@ function avaraAlgorithm(mario, node, prevDir) {
         }
         // right
         if(!impossiblesM.includes("right") && prevDir != "left" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = deep_copy(parentNode)
+            let parentNodeCopy = util.deep_copy(parentNode)
             let object = { 
                 parent: parentNodeCopy, 
                 posx: parentNodeCopy.posx+1, 
@@ -691,10 +670,10 @@ try{
     // The world is painted at the beginning
     paintWorld(world)
 
-    // startTime = performance.now()
-
-    sol = avaraAlgorithm(deep_copy(mario), world, null);
-    sol = convertSolutionToList(sol);
+    startTime = performance.now()
+    sol = avaraAlgorithm(util.deep_copy(mario), world, null);
+    endTime = performance.now()
+    sol = util.convertSolutionToList(sol);
     // console.log(sol)
     // console.log(tree)
 
