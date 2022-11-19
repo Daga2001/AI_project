@@ -52,3 +52,6 @@ The ultimate AI's project developed by Unixvalle members
 - Se mejora el sonido del ambiente, cada vez que mario tome una estrella, no va a reiniciarse la canción de Super Star Mario.
 - Se implementa el algoritmo de amplitud. (hay que revisar las 2 alternativas en la siguiente sesión)
 - Se añaden funciones a utils.js que son necesarias para todos los archivos de JavaScript, con el fin de mantener un mejor orden en la implementación de código.
+
+## Update 2.0
+- Se mejora la posición del menu desplegable para la elección del algoritmo a utilizar por parte del usuario.
