@@ -88,7 +88,7 @@ body {
   height: 350px;
   background: var(--gris_1);
   z-index: 1;
-  transform: translate(290px,-260px);
+  transform: translate(23vw,-50vh);
   transition-delay: 0s, 0.5s, 0.5s;
   box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1); 
 }
