@@ -508,6 +508,41 @@ function costsAlgorithm(mario, node, prevDir) {
         return queue.splice(mini,1)[0];
     }
     /**
+     * Checks if there's a start right after mario's position to take it.
+     * @param {Object} mario 
+     * @returns boolean
+     */
+     let checkIfStar = function (node, mario) {
+        prevDir = mario.dir
+        if(mario.starTime == 6) {
+            prevDir = null;
+        }
+        // up
+        if(mario.posy > 0) {
+            if(node[mario.posy-1][mario.posx] == 3) {
+                prevDir = null;
+            }
+        }
+        // down
+        if(mario.posy < world.length) {
+            if(node[mario.posy+1][mario.posx] == 3) {
+                prevDir = null;
+            }
+        }
+        // left
+        if(mario.posx > 0) {
+            if(node[mario.posy][mario.posx-1] == 3) {
+                prevDir = null;
+            }
+        }
+        // right
+        if(mario.posx < world.length) {
+            if(node[mario.posy][mario.posx+1] == 3) {
+                prevDir = null;
+            }   
+        } 
+    }
+    /**
      * Determines the cost of the movement.
      * @param {Number} valDir - value of cell where mario's gonna stay.
      * @returns Cost
@@ -520,7 +555,7 @@ function costsAlgorithm(mario, node, prevDir) {
             return 1;
         }
         else {
-            if(valDir == 3 || valDir == 4 || valDir == 0) {
+            if(valDir == 3 || valDir == 4 || valDir == 0 || valDir == 6 || valDir == 2) {
                 return 1;
             }
             if(valDir == 5) {
@@ -534,6 +569,7 @@ function costsAlgorithm(mario, node, prevDir) {
     // --------------------------------------------------------------
     // starting up with inital values
     // --------------------------------------------------------------
+    checkIfStar(world, mario);
     // up
     if(!impossiblesM.includes("up") && prevDir != "down") {
         let object = { 
@@ -619,7 +655,7 @@ function costsAlgorithm(mario, node, prevDir) {
         if(parentNode.val == "6")  {
             return parentNode;
         }
-        prevDir = parentNode.dir
+        checkIfStar(world, parentNode);
         // up
         if(!impossiblesM.includes("up") && prevDir != "down") {
             let parentNodeCopy = util.deep_copy(parentNode)
@@ -720,8 +756,8 @@ try{
     sol = costsAlgorithm(util.deep_copy(mario), world, null);
     endTime = performance.now()
     sol = util.convertSolutionToList(sol);
-    // console.log(sol);
-    // console.log(tree);
+    console.log(sol);
+    console.log(tree);
 
     // When mario starts to move
     let intervalID = setInterval(() => {
