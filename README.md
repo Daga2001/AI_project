@@ -60,3 +60,7 @@ The ultimate AI's project developed by Unixvalle members
 - Se corrigen errores en algoritmos de costo y A*:
   - El arbol ahora se expande correctamente cuando Mario está en una casilla de distancia hacía la princesa.
   - Mario se puede devolver cuando tomé una estrella. Para ello se crea una funcionalidad que obliga a mario a revisar su entorno primero para ver si hay una estrella.
+
+## Update 2.2
+- Se corrigen errores de algunas pruebas de la IA:
+  - pruebas 7,8,9,10,11
