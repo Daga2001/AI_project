@@ -119,7 +119,8 @@ export function euclidianDistance(a, b){
  */
 
  export function calcHeuristic(a, b){
-  return euclidianDistance(a,b) / Math.pow(10,99);
+  // return euclidianDistance(a,b) / Math.pow(10,99);
+  return euclidianDistance(a,b);
 }
 
 
