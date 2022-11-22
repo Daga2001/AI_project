@@ -586,20 +586,10 @@ function starAlgorithm(mario, node, prevDir) {
     let minimum = function (queue) {
         let mini = 0;
         for(let i = 1; i < queue.length; i++) {
-            let h1 = util.manhattanDist(queue[i], princess);
-            let h2 = util.manhattanDist(queue[mini], princess);
+            let h1 = util.calcHeuristic(queue[i], princess);
+            let h2 = util.calcHeuristic(queue[mini], princess);
             if(queue[i].g + h1 < queue[mini].g + h2) {
                 mini = i;
-            }
-            else if(queue[i].g + h1 == queue[mini].g + h2) {
-                for(let j = tree.expanded.length-1; j >= 0; j--) {
-                    if(queue[i].parent == tree.expanded[j]) {
-                        mini = i
-                    }
-                    if(queue[mini].parent == tree.expanded[j]) {
-                        mini = i
-                    }
-                }
             }
         }
         return queue.splice(mini,1)[0];
@@ -634,7 +624,7 @@ function starAlgorithm(mario, node, prevDir) {
             }
         }
         // down
-        if(mario.posy < node.length) {
+        if(mario.posy < node.length-1) {
             if(node[mario.posy+1][mario.posx] == 3 && dir == "down") {
                 prevDir = null;
                 return 0;
@@ -656,7 +646,7 @@ function starAlgorithm(mario, node, prevDir) {
             }
         }
         // right
-        if(mario.posx < node.length) {
+        if(mario.posx < node.length-1) {
             if(node[mario.posy][mario.posx+1] == 3 && dir == "right") {
                 prevDir = null;
                 return 0;
@@ -794,9 +784,6 @@ function starAlgorithm(mario, node, prevDir) {
         impossiblesM = impossibleMovements(parentNode, parentNode.currentNode);
         if(parentNode.val == "6")  {
             return parentNode;
-        }
-        if(parentNode.starTime == 12 && parentNode.posx == 3 && parentNode.posy == 5) {
-            console.log("do it")
         }
         // up
         checkIfItem(parentNode.currentNode, parentNode, "up", parentNode.parent);

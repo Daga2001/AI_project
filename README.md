@@ -9,6 +9,9 @@ The ultimate AI's project developed by Unixvalle members
 - Diego Chaverra
 - David Alberto
 
+# Instructions
+Para poner el mapa debe irse al menu custom map y dar click sobre el boton "seleccionar archivo" luego darle al botón de ok una vez haya sido subida la prueba. Para probar los algoritmos de click sobre el botón circular con la flecha y eliga el algoritmo que desee poner a prueba con el ambiente que subió.
+
 ## Update 1.0
 - se crea la interfaz gráfica para el juego de mario 
 - se agregan efectos de sonido de fondo 

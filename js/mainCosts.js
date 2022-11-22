@@ -607,7 +607,7 @@ function starAlgorithm(mario, node, prevDir) {
         prevDir = mario.dir
         // Checks if mario picked an item righ before this movement.
         if(parent != null) {
-            if(mario.items.length != parent.items.length) {
+            if(mario.items.length == parent.items.length + 1) {
                 prevDir = null;
                 return 0;
             }
@@ -624,7 +624,7 @@ function starAlgorithm(mario, node, prevDir) {
             }
         }
         // down
-        if(mario.posy < node.length) {
+        if(mario.posy < node.length-1) {
             if(node[mario.posy+1][mario.posx] == 3 && dir == "down") {
                 prevDir = null;
                 return 0;
@@ -646,7 +646,7 @@ function starAlgorithm(mario, node, prevDir) {
             }
         }
         // right
-        if(mario.posx < node.length) {
+        if(mario.posx < node.length-1) {
             if(node[mario.posy][mario.posx+1] == 3 && dir == "right") {
                 prevDir = null;
                 return 0;

@@ -550,11 +550,11 @@ function depthAlgorithm(mario, node, prevDir) {
     // ==============================================================
     let impossiblesM = impossibleMovements(mario, node);
     /**
-     * Determines whenever a nodes has been expanded.
+     * Determines whenever a node has been expanded.
      * @param {Object} node 
      * @return boolean
      */
-    let parentIsRepeated = function(node) {
+    let isExpanded = function(node) {
         for(let i = 0; i < tree.expanded.length; i++) {
             if(tree.expanded[i].posx == node.posx &&
                tree.expanded[i].posy == node.posy) {
@@ -659,62 +659,64 @@ function depthAlgorithm(mario, node, prevDir) {
             return parentNode;
         }
         prevDir = parentNode.dir
-        // up
-        if(!impossiblesM.includes("up") && prevDir != "down" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = util.deep_copy(parentNode)
-            let object = { 
-                parent: parentNodeCopy, 
-                posx: parentNodeCopy.posx, 
-                posy: parentNodeCopy.posy-1,
-                dir: "up", 
-                val: node[parentNodeCopy.posy-1][parentNodeCopy.posx], 
-                depth: parentNodeCopy.depth + 1,
+        if(!isExpanded(parentNode)) {
+            // up
+            if(!impossiblesM.includes("up") && prevDir != "down") {
+                let parentNodeCopy = util.deep_copy(parentNode)
+                let object = { 
+                    parent: parentNodeCopy, 
+                    posx: parentNodeCopy.posx, 
+                    posy: parentNodeCopy.posy-1,
+                    dir: "up", 
+                    val: node[parentNodeCopy.posy-1][parentNodeCopy.posx], 
+                    depth: parentNodeCopy.depth + 1,
+                }
+                tree.queue.push(object);
             }
-            tree.queue.push(object);
-        }
-        // down
-        if(!impossiblesM.includes("down") && prevDir != "up" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = util.deep_copy(parentNode)
-            let object = { 
-                parent: parentNodeCopy, 
-                posx: parentNodeCopy.posx, 
-                posy: parentNodeCopy.posy+1,
-                dir: "down", 
-                val: node[parentNodeCopy.posy+1][parentNodeCopy.posx], 
-                depth: parentNodeCopy.depth + 1,
+            // down
+            if(!impossiblesM.includes("down") && prevDir != "up") {
+                let parentNodeCopy = util.deep_copy(parentNode)
+                let object = { 
+                    parent: parentNodeCopy, 
+                    posx: parentNodeCopy.posx, 
+                    posy: parentNodeCopy.posy+1,
+                    dir: "down", 
+                    val: node[parentNodeCopy.posy+1][parentNodeCopy.posx], 
+                    depth: parentNodeCopy.depth + 1,
+                }
+                tree.queue.push(object);
             }
-            tree.queue.push(object);
-        }
-        // left
-        if(!impossiblesM.includes("left") && prevDir != "right" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = util.deep_copy(parentNode)
-            let object = { 
-                parent: parentNodeCopy, 
-                posx: parentNodeCopy.posx-1, 
-                posy: parentNodeCopy.posy,
-                dir: "left", 
-                val: node[parentNodeCopy.posy][parentNodeCopy.posx-1], 
-                depth: parentNodeCopy.depth + 1,
+            // left
+            if(!impossiblesM.includes("left") && prevDir != "right") {
+                let parentNodeCopy = util.deep_copy(parentNode)
+                let object = { 
+                    parent: parentNodeCopy, 
+                    posx: parentNodeCopy.posx-1, 
+                    posy: parentNodeCopy.posy,
+                    dir: "left", 
+                    val: node[parentNodeCopy.posy][parentNodeCopy.posx-1], 
+                    depth: parentNodeCopy.depth + 1,
+                }
+                tree.queue.push(object);
             }
-            tree.queue.push(object);
-        }
-        // right
-        if(!impossiblesM.includes("right") && prevDir != "left" && !parentIsRepeated(parentNode)) {
-            let parentNodeCopy = util.deep_copy(parentNode)
-            let object = { 
-                parent: parentNodeCopy, 
-                posx: parentNodeCopy.posx+1, 
-                posy: parentNodeCopy.posy,
-                dir: "right", 
-                val: node[parentNodeCopy.posy][parentNodeCopy.posx+1], 
-                depth: parentNodeCopy.depth + 1,
+            // right
+            if(!impossiblesM.includes("right") && prevDir != "left") {
+                let parentNodeCopy = util.deep_copy(parentNode)
+                let object = { 
+                    parent: parentNodeCopy, 
+                    posx: parentNodeCopy.posx+1, 
+                    posy: parentNodeCopy.posy,
+                    dir: "right", 
+                    val: node[parentNodeCopy.posy][parentNodeCopy.posx+1], 
+                    depth: parentNodeCopy.depth + 1,
+                }
+                tree.queue.push(object);
             }
-            tree.queue.push(object);
-        }
-        tree.expanded.push(parentNode)
-        // increases the depth
-        if(tree.depth < parentNode.depth){
-            tree.depth = parentNode.depth;
+            tree.expanded.push(parentNode)
+            // increases the depth
+            if(tree.depth < parentNode.depth){
+                tree.depth = parentNode.depth;
+            }
         }
     }
 }

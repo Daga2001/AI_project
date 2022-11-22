@@ -83,6 +83,14 @@ export function deep_copy(object) {
     return JSON.parse(JSON.stringify(object));
 }
 
+/**
+ * Determines if two lists or objects are equal
+ * @param {*} o1 
+ * @param {*} o2 
+ */
+export function areEqual(o1, o2) {
+    return JSON.stringify(o1) === JSON.stringify(o2);
+}
 
 /**
  * Calculates the manhattan distance between an object "a" regarding an object "b"
@@ -93,6 +101,27 @@ export function deep_copy(object) {
 export function manhattanDist(a, b) {
     return Math.abs(a.posx-b.posx) + Math.abs(a.posy-b.posy);
 }
+
+/**
+ * Calculates the euclidian distance between an object "a" regarding an object "b"
+ * @param {Object} a {posx: ..., posy: ...} 
+ * @param {Object} b {posx: ..., posy: ...}
+ */
+
+export function euclidianDistance(a, b){
+    return Math.sqrt(Math.pow(a.posx-b.posx,2)+Math.pow(a.posy-b.posy,2));
+}
+
+/**
+ * Determines the heuristic's structure for our A* algorithm.
+ * @param {Object} a {posx: ..., posy: ...} 
+ * @param {Object} b {posx: ..., posy: ...}
+ */
+
+ export function calcHeuristic(a, b){
+  return euclidianDistance(a,b) / Math.pow(10,99);
+}
+
 
 /**
  * Converts the given solution in a list readable for mario to start moving.
