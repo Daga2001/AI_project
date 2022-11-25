@@ -63,7 +63,8 @@ let mario = {
     items: [],
     starTime: 0, // attribute used for measuring star's time
     // useful to identify when an item must be drawn after Mario gets into a cell.
-    rejectedItem: []
+    rejectedItem: [],
+    rejectedBowsers: []
 }
 
 let initMario = {
@@ -72,7 +73,8 @@ let initMario = {
     items: [],
     starTime: 0, // attribute used for measuring star's time
     // useful to identify when an item must be drawn after Mario gets into a cell.
-    rejectedItem: []
+    rejectedItem: [],
+    rejectedBowsers: []
 }
 
 // Princess's stats
@@ -309,15 +311,26 @@ function manageItems(mario, node, dir, soundActivated) {
             }
         }
     }
+    if(soundActivated) {
+        // when mario meets bowser or koopas without power ups
+        if(marioVal == 5 && mario.items.length == 0) {
+            removeItem(); // kills bowser
+            mario.rejectedBowsers.push("5");
+        }
+    }
     // when mario spends an item
     // star
     if(mario.items.includes("star") && mario.starTime % 6 == 0){ 
+        removeItem() // kills bowser
         mario.items.pop()
     }
     // flower
     if(marioVal == 5 && mario.items.includes("flower")) {
-        fire_ball.currentTime = 0
-        fire_ball.play()
+        if(soundActivated) {
+            fire_ball.currentTime = 0
+            fire_ball.play()
+        }
+        removeItem() // kills bowser
         mario.items.pop()
     }
     // when mario picks an item
@@ -389,6 +402,17 @@ function moveMario(dir) {
             paintItem(mario.posx, mario.posy, name, color)
             world[mario.posy][mario.posx] = mario.rejectedItem[0].toString();
             mario.rejectedItem.pop();
+        }
+        else if(mario.rejectedBowsers.length > 0) {
+            let name = "";
+            let color = "";
+            if(mario.rejectedBowsers[0] == 5) {
+                name = "bowser";
+                color = "green";
+            }
+            paintItem(mario.posx, mario.posy, name, color)
+            world[mario.posy][mario.posx] = mario.rejectedBowsers[0].toString();
+            mario.rejectedBowsers.pop();
         }
         else {
             mario.recentlyRejected = false;
@@ -471,7 +495,7 @@ function restartGame() {
     world = util.deep_copy(initWorld);
     mario = util.deep_copy(initMario);
     tree = { 
-        queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: []}],
+        queue: [{ parent: null, posx: null, posy: null, dir: null, val: null, g: 0, depth: 1, items: [], starTime: 0, rejectedItem: [], rejectedBowsers: []}],
         expanded: [],
         depth: 1
     };
@@ -607,7 +631,7 @@ function starAlgorithm(mario, node, prevDir) {
         prevDir = mario.dir
         // Checks if mario picked an item righ before this movement.
         if(parent != null) {
-            if(mario.items.length == parent.items.length + 1) {
+            if(mario.items.length == parent.items.length+1) {
                 prevDir = null;
                 return 0;
             }
@@ -618,9 +642,15 @@ function starAlgorithm(mario, node, prevDir) {
                 prevDir = null;
                 return 0;
             }
-            if(node[mario.posy-1][mario.posx] == 4 && dir == "up") {
+            else if(node[mario.posy-1][mario.posx] == 4 && dir == "up") {
                 prevDir = null;
                 return 0;
+            }
+            else if(mario.parent != null && mario.parent.currentNode != null && dir == "up") {
+                if(mario.parent.currentNode[mario.posy][mario.posx] == 5 && node[mario.posy][mario.posx] == 0) {
+                    prevDir = null;
+                    return 0;
+                }
             }
         }
         // down
@@ -629,9 +659,15 @@ function starAlgorithm(mario, node, prevDir) {
                 prevDir = null;
                 return 0;
             }
-            if(node[mario.posy+1][mario.posx] == 4 && dir == "down") {
+            else if(node[mario.posy+1][mario.posx] == 4 && dir == "down") {
                 prevDir = null;
                 return 0;
+            }
+            else if(mario.parent != null && mario.parent.currentNode != null && dir == "down") {
+                if(mario.parent.currentNode[mario.posy][mario.posx] == 5 && node[mario.posy][mario.posx] == 0) {
+                    prevDir = null;
+                    return 0;
+                }
             }
         }
         // left
@@ -644,6 +680,12 @@ function starAlgorithm(mario, node, prevDir) {
                 prevDir = null;
                 return 0;
             }
+            else if(mario.parent != null && mario.parent.currentNode != null && dir == "left") {
+                if(mario.parent.currentNode[mario.posy][mario.posx] == 5 && node[mario.posy][mario.posx] == 0) {
+                    prevDir = null;
+                    return 0;
+                }
+            }
         }
         // right
         if(mario.posx < node.length-1) {
@@ -655,18 +697,45 @@ function starAlgorithm(mario, node, prevDir) {
                 prevDir = null;
                 return 0;
             }   
+            else if(mario.parent != null && mario.parent.currentNode != null && dir == "right") {
+                if(mario.parent.currentNode[mario.posy][mario.posx] == 5 && node[mario.posy][mario.posx] == 0) {
+                    prevDir = null;
+                    return 0;
+                }
+            }
         }
     }
     /**
      * Determines the cost of the movement.
-     * @param {Number} valDir - value of cell where mario's gonna stay.
+     * @param {Number} character a character, in this case, Mario.
+     * @param {Number} dir value of direction where mario's gonna stay.
+     * @param {Number} node the current node (world)
      * @returns Cost
      */
-    let g = function (node, valDir) {
-        if(node.items.includes("star")) {
+    let g = function (character, dir, node) {
+        /**
+         * checks which will be the value's cell where mario's gonna stay.
+         */
+        let determineDirection = function() {
+            if(dir == "up") {
+                return node[character.posy-1][character.posx];
+            }
+            else if(dir == "down") {
+                return node[character.posy+1][character.posx];
+            }
+            else if(dir == "left") {
+                return node[character.posy][character.posx-1];
+            }
+            else if(dir == "right") {
+                return node[character.posy][character.posx+1];
+            }
+        }
+        let valDir = determineDirection();
+        // logic
+        if(character.items.includes("star")) {
             return 1/2;
         }
-        if(node.items.includes("flower")) {
+        if(character.items.includes("flower")) {
             return 1;
         }
         else {
@@ -692,15 +761,16 @@ function starAlgorithm(mario, node, prevDir) {
         manageItems(marioCopy, nodeCopy, "up", false);
         let object = { 
             parent: tree.queue[0],
-            posx: marioCopy.posx, 
+            posx: marioCopy.posx,
             posy: marioCopy.posy-1,
             dir: "up", 
             val: node[marioCopy.posy-1][marioCopy.posx],
-            g: tree.queue[0].g + g(mario, node[marioCopy.posy-1][marioCopy.posx]), 
+            g: tree.queue[0].g + g(mario, "up", node), 
             depth: tree.queue[0].depth + 1,
             items: marioCopy.items, 
             starTime: marioCopy.starTime, 
             rejectedItem: marioCopy.rejectedItem,
+            rejectedBowsers: marioCopy.rejectedBowsers,
             currentNode: nodeCopy
         }        
         tree.queue.push(object);
@@ -717,11 +787,12 @@ function starAlgorithm(mario, node, prevDir) {
             posy: marioCopy.posy+1,
             dir: "down", 
             val: node[marioCopy.posy+1][marioCopy.posx], 
-            g: tree.queue[0].g + g(mario, node[marioCopy.posy+1][marioCopy.posx]), 
+            g: tree.queue[0].g + g(mario, "down", node), 
             depth: tree.queue[0].depth + 1,
             items: marioCopy.items, 
             starTime: marioCopy.starTime, 
             rejectedItem: marioCopy.rejectedItem,
+            rejectedBowsers: marioCopy.rejectedBowsers,
             currentNode: nodeCopy
         }
         tree.queue.push(object);
@@ -738,11 +809,12 @@ function starAlgorithm(mario, node, prevDir) {
             posy: marioCopy.posy,
             dir: "left", 
             val: node[marioCopy.posy][marioCopy.posx-1],
-            g: tree.queue[0].g + g(mario, node[marioCopy.posy][marioCopy.posx-1]), 
+            g: tree.queue[0].g + g(mario, "left", node), 
             depth: tree.queue[0].depth + 1,
             items: marioCopy.items, 
             starTime: marioCopy.starTime, 
             rejectedItem: marioCopy.rejectedItem,
+            rejectedBowsers: marioCopy.rejectedBowsers,
             currentNode: nodeCopy
         }
         tree.queue.push(object);
@@ -759,11 +831,12 @@ function starAlgorithm(mario, node, prevDir) {
             posy: marioCopy.posy,
             dir: "right", 
             val: node[marioCopy.posy][marioCopy.posx+1],
-            g: tree.queue[0].g + g(mario, node[marioCopy.posy][marioCopy.posx+1]), 
+            g: tree.queue[0].g + g(mario, "right", node), 
             depth: tree.queue[0].depth + 1,
             items: marioCopy.items, 
             starTime: marioCopy.starTime, 
             rejectedItem: marioCopy.rejectedItem,
+            rejectedBowsers: marioCopy.rejectedBowsers,
             currentNode: nodeCopy
         }
         tree.queue.push(object);
@@ -789,6 +862,7 @@ function starAlgorithm(mario, node, prevDir) {
         checkIfItem(parentNode.currentNode, parentNode, "up", parentNode.parent);
         if(!impossiblesM.includes("up") && prevDir != "down") {
             let parentNodeCopy = util.deep_copy(parentNode);
+            let gn = g(parentNode, "up", parentNode.currentNode);
             let nodeCopy = util.deep_copy(parentNode.currentNode);
             manageItems(parentNodeCopy, nodeCopy, "up", false);
             let object = { 
@@ -797,11 +871,12 @@ function starAlgorithm(mario, node, prevDir) {
                 posy: parentNodeCopy.posy-1,
                 dir: "up", 
                 val: parentNode.currentNode[parentNodeCopy.posy-1][parentNodeCopy.posx],
-                g: parentNodeCopy.g + g(parentNode, parentNode.currentNode[parentNodeCopy.posy-1][parentNodeCopy.posx]), 
+                g: parentNodeCopy.g + gn, 
                 depth: parentNodeCopy.depth + 1,
                 items: parentNodeCopy.items, 
                 starTime: parentNodeCopy.starTime, 
                 rejectedItem: parentNodeCopy.rejectedItem,
+                rejectedBowsers: parentNodeCopy.rejectedBowsers,
                 currentNode: nodeCopy
             }
             tree.queue.push(object);
@@ -810,6 +885,7 @@ function starAlgorithm(mario, node, prevDir) {
         checkIfItem(parentNode.currentNode, parentNode, "down", parentNode.parent);
         if(!impossiblesM.includes("down") && prevDir != "up") {
             let parentNodeCopy = util.deep_copy(parentNode);
+            let gn = g(parentNode, "down", parentNode.currentNode);
             let nodeCopy = util.deep_copy(parentNode.currentNode);
             manageItems(parentNodeCopy, nodeCopy, "down", false);
             let object = { 
@@ -818,11 +894,12 @@ function starAlgorithm(mario, node, prevDir) {
                 posy: parentNodeCopy.posy+1,
                 dir: "down", 
                 val: parentNode.currentNode[parentNodeCopy.posy+1][parentNodeCopy.posx],
-                g: parentNodeCopy.g + g(parentNode, parentNode.currentNode[parentNodeCopy.posy+1][parentNodeCopy.posx]), 
+                g: parentNodeCopy.g + gn, 
                 depth: parentNodeCopy.depth + 1,
                 items: parentNodeCopy.items, 
                 starTime: parentNodeCopy.starTime, 
                 rejectedItem: parentNodeCopy.rejectedItem,
+                rejectedBowsers: parentNodeCopy.rejectedBowsers,
                 currentNode: nodeCopy
             }
             tree.queue.push(object);
@@ -831,6 +908,7 @@ function starAlgorithm(mario, node, prevDir) {
         checkIfItem(parentNode.currentNode, parentNode, "left", parentNode.parent);
         if(!impossiblesM.includes("left") && prevDir != "right") {
             let parentNodeCopy = util.deep_copy(parentNode);
+            let gn = g(parentNode, "left", parentNode.currentNode);
             let nodeCopy = util.deep_copy(parentNode.currentNode);
             manageItems(parentNodeCopy, nodeCopy, "left", false);
             let object = { 
@@ -839,11 +917,12 @@ function starAlgorithm(mario, node, prevDir) {
                 posy: parentNodeCopy.posy,
                 dir: "left", 
                 val: parentNode.currentNode[parentNodeCopy.posy][parentNodeCopy.posx-1],
-                g: parentNodeCopy.g + g(parentNode, parentNode.currentNode[parentNodeCopy.posy][parentNodeCopy.posx-1]), 
+                g: parentNodeCopy.g + gn, 
                 depth: parentNodeCopy.depth + 1,
                 items: parentNodeCopy.items, 
                 starTime: parentNodeCopy.starTime, 
                 rejectedItem: parentNodeCopy.rejectedItem,
+                rejectedBowsers: parentNodeCopy.rejectedBowsers,
                 currentNode: nodeCopy
             }
             tree.queue.push(object);
@@ -852,6 +931,7 @@ function starAlgorithm(mario, node, prevDir) {
         checkIfItem(parentNode.currentNode, parentNode, "right", parentNode.parent);
         if(!impossiblesM.includes("right") && prevDir != "left") {
             let parentNodeCopy = util.deep_copy(parentNode);
+            let gn = g(parentNode, "right", parentNode.currentNode);
             let nodeCopy = util.deep_copy(parentNode.currentNode);
             manageItems(parentNodeCopy, nodeCopy, "right", false);
             let object = { 
@@ -860,11 +940,12 @@ function starAlgorithm(mario, node, prevDir) {
                 posy: parentNodeCopy.posy,
                 dir: "right", 
                 val: parentNode.currentNode[parentNodeCopy.posy][parentNodeCopy.posx+1],
-                g: parentNodeCopy.g + g(parentNode, parentNode.currentNode[parentNodeCopy.posy][parentNodeCopy.posx+1]), 
+                g: parentNodeCopy.g + gn, 
                 depth: parentNodeCopy.depth + 1,
                 items: parentNodeCopy.items, 
                 starTime: parentNodeCopy.starTime, 
                 rejectedItem: parentNodeCopy.rejectedItem,
+                rejectedBowsers: parentNodeCopy.rejectedBowsers,
                 currentNode: nodeCopy
             }
             tree.queue.push(object);
@@ -914,21 +995,10 @@ try{
         restartGame();
     })
        
-    // let intervalID = setInterval(() => {
-    //     let prevDir = null
-    //     if(expandedNodes.length > 0) {
-    //         prevDir = expandedNodes[expandedNodes.length-1];
-    //     }
-    //     avaraAlgorithm(world,prevDir);
-    //     if(mario.posx == princess.posx && mario.posy == princess.posy) {
-    //         clearInterval(intervalID);
-    //         endGame();
-    //     }
-    // }, 1000)    
-
     // // Key listener
     // document.body.addEventListener('keydown', ( event ) => {
     //     console.log(mario)
+    //     console.log(world)
     //     if(event.key == "ArrowUp") {
     //         moveMario("up")
     //     }

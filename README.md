@@ -67,3 +67,6 @@ Para poner el mapa debe irse al menu custom map y dar click sobre el boton "sele
 ## Update 2.2
 - Se corrigen errores de algunas pruebas de la IA:
   - pruebas 7,8,9,10,11
+
+## Update 2.3
+- Se corrigio el error de la pruebaX8. Ahora Mario no matará Koopas si no tiene power ups.
