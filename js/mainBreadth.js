@@ -58,21 +58,23 @@ initWorld = util.deep_copy(worldTmp);
 
 // Mario's stats
 let mario = {
-    posx: 0,
-    posy: 0,
+    posx: 1,
+    posy: 1,
     items: [],
     starTime: 0, // attribute used for measuring star's time
     // useful to identify when an item must be drawn after Mario gets into a cell.
-    rejectedItem: []
+    rejectedItem: [],
+    rejectedBowsers: []
 }
 
 let initMario = {
-    posx: 0,
-    posy: 0,
+    posx: 1,
+    posy: 1 ,
     items: [],
     starTime: 0, // attribute used for measuring star's time
     // useful to identify when an item must be drawn after Mario gets into a cell.
-    rejectedItem: []
+    rejectedItem: [],
+    rejectedBowsers: []
 }
 
 // Princess's stats
@@ -268,12 +270,42 @@ function paintItem(x, y, name, color) {
  * @param {Number} marioVal means the value of cell in the direction to move, i.e. mario[y][x+1] can be a marioVal pointing to right hand.
  * @param {Boolean} soundActivated this variable is to say if you want to hear sound or not.
  */
-function manageItems(mario, marioVal, soundActivated) {
+ function manageItems(mario, node, dir, soundActivated) {
+    /**
+     * Deletes a star or flower
+     */
+    let removeItem = function() {
+        if(dir == "up") {
+            node[mario.posy-1][mario.posx] = "0";
+        }
+        else if(dir == "down") {
+            node[mario.posy+1][mario.posx] = "0";
+        }
+        else if(dir == "left") {
+            node[mario.posy][mario.posx-1] = "0";
+        }
+        else if(dir == "right") {
+            node[mario.posy][mario.posx+1] = "0";
+        }
+    }
+    let marioVal = 0;
+    if(dir == "up") {
+        marioVal = node[mario.posy-1][mario.posx]
+    }
+    else if(dir == "down") {
+        marioVal = node[mario.posy+1][mario.posx]
+    }
+    else if(dir == "left") {
+        marioVal = node[mario.posy][mario.posx-1]
+    }
+    else if(dir == "right") {
+        marioVal = node[mario.posy][mario.posx+1]
+    }
     // decreases star time
     if(mario.starTime > 0)  {
         mario.starTime -= 1;
-        if(mario.starTime == 0){
-            if(soundActivated && !audioBackground.src.includes(`main-theme.mp3`)) {
+        if(mario.starTime == 0) {
+            if(soundActivated && !audioBackground.src == `../sound/main-theme.mp3`) {
                 audioBackground.pause()
                 audioBackground.src = `../sound/main-theme.mp3`
                 audioBackground.currentTime = 0
@@ -282,15 +314,26 @@ function manageItems(mario, marioVal, soundActivated) {
             }
         }
     }
+    if(soundActivated) {
+        // when mario meets bowser or koopas without power ups
+        if(marioVal == 5 && mario.items.length == 0) {
+            removeItem(); // kills bowser
+            mario.rejectedBowsers.push("5");
+        }
+    }
     // when mario spends an item
     // star
     if(mario.items.includes("star") && mario.starTime % 6 == 0){ 
+        removeItem() // kills bowser
         mario.items.pop()
     }
     // flower
     if(marioVal == 5 && mario.items.includes("flower")) {
-        fire_ball.currentTime = 0
-        fire_ball.play()
+        if(soundActivated) {
+            fire_ball.currentTime = 0
+            fire_ball.play()
+        }
+        removeItem() // kills bowser
         mario.items.pop()
     }
     // when mario picks an item
@@ -304,6 +347,7 @@ function manageItems(mario, marioVal, soundActivated) {
                 audioBackground.loop = true
                 audioBackground.play()
             }
+            removeItem();
             mario.items.push("star");
             mario.starTime += 6;
         }
@@ -314,6 +358,7 @@ function manageItems(mario, marioVal, soundActivated) {
     // flower
     if(marioVal == 4) {
         if(mario.items.includes("flower") || mario.items.length == 0) {
+            removeItem();
             mario.items.push("flower");
         }
         else {
@@ -361,6 +406,17 @@ function moveMario(dir) {
             world[mario.posy][mario.posx] = mario.rejectedItem[0].toString();
             mario.rejectedItem.pop();
         }
+        else if(mario.rejectedBowsers.length > 0) {
+            let name = "";
+            let color = "";
+            if(mario.rejectedBowsers[0] == 5) {
+                name = "bowser";
+                color = "green";
+            }
+            paintItem(mario.posx, mario.posy, name, color)
+            world[mario.posy][mario.posx] = mario.rejectedBowsers[0].toString();
+            mario.rejectedBowsers.pop();
+        }
         else {
             mario.recentlyRejected = false;
             paintSquare(mario.posx*squareSize,mario.posy*squareSize,squareSize,squareSize,"white");
@@ -385,7 +441,7 @@ function moveMario(dir) {
     let impossiblesM = impossibleMovements(mario, world);
     if(dir == "up" && !impossiblesM.includes("up")) {
         movePreviousCell(world[mario.posy-1][mario.posx])
-        manageItems(mario, world[mario.posy-1][mario.posx], true)
+        manageItems(mario, world, "up", true)
         manageKoopas(world[mario.posy-1][mario.posx])
         world[mario.posy-1][mario.posx] = "2";
         mario.posy -= 1;
@@ -393,7 +449,7 @@ function moveMario(dir) {
     }
     if(dir == "down" && !impossiblesM.includes("down")) {
         movePreviousCell(world[mario.posy+1][mario.posx])
-        manageItems(mario, world[mario.posy+1][mario.posx], true)
+        manageItems(mario, world, "down", true)
         manageKoopas(world[mario.posy+1][mario.posx])
         world[mario.posy+1][mario.posx] = "2";
         mario.posy += 1;
@@ -401,7 +457,7 @@ function moveMario(dir) {
     }
     if(dir == "left" && !impossiblesM.includes("left")) {
         movePreviousCell(world[mario.posy][mario.posx-1])
-        manageItems(mario, world[mario.posy][mario.posx-1], true)
+        manageItems(mario, world, "left", true)
         manageKoopas(world[mario.posy][mario.posx-1])
         world[mario.posy][mario.posx-1] = "2";
         mario.posx -= 1;
@@ -409,7 +465,7 @@ function moveMario(dir) {
     }
     if(dir == "right" && !impossiblesM.includes("right")) {
         movePreviousCell(world[mario.posy][mario.posx+1])
-        manageItems(mario, world[mario.posy][mario.posx+1], true)
+        manageItems(mario, world, "right", true)
         manageKoopas(world[mario.posy][mario.posx+1])
         world[mario.posy][mario.posx+1] = "2";
         mario.posx += 1;
@@ -498,6 +554,7 @@ function breadthAlgorithm(mario, node, prevDir) {
     let impossiblesM = impossibleMovements(mario, node);
     /**
      * Determines which node must be expanded with a given list with the order of operators
+     * @param {List} queue
      * @param {List} order order of operators
      */ 
     let nextNode = function (queue, order) {
